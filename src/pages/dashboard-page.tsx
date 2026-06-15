@@ -1,12 +1,11 @@
-import { createMemo, createSignal, Show } from 'solid-js'
+import { createMemo, Show } from 'solid-js'
 import { HistoryTable } from '../components/history-table'
 import { StatusBadge } from '../components/status-badge'
 import { useMarcajes } from '../hooks/use-marcajes'
-import { formatActionLabel, formatCreatedAt, formatRefreshTime, formatStatusLabel, getActionTone, getLatestRecord, getStatusTone, summarizeStatuses } from '../utils/formatters'
+import { formatActionLabel, formatCreatedAt, formatStatusLabel, getActionTone, getLatestRecord, getStatusTone, summarizeStatuses } from '../utils/formatters'
 
 export function DashboardPage() {
     const marcajesQuery = useMarcajes()
-    const [lastManualRefresh, setLastManualRefresh] = createSignal(new Date())
 
     const records = createMemo(() => marcajesQuery.data?.items ?? [])
     const recordCount = createMemo(() => marcajesQuery.data?.count ?? 0)
@@ -15,7 +14,6 @@ export function DashboardPage() {
 
     const handleRefresh = async () => {
         await marcajesQuery.refetch()
-        setLastManualRefresh(new Date())
     }
 
     return (
@@ -23,19 +21,16 @@ export function DashboardPage() {
             <section class="hero-panel panel">
                 <div class="hero-panel__content">
                     <div>
-                        <h1>AutoClocking</h1>
-                        <p class="hero-panel__lead">
-                            Monitor informativo del sistema que registra marcajes automáticos y expone el historial operativo desde el endpoint productivo.
-                        </p>
+                        <div class="hero-panel__title">
+                            <img class="hero-panel__icon" src="/biohazard.svg" alt="" aria-hidden="true" />
+                            <h1>AutoClocking</h1>
+                        </div>
+                        <p class="hero-panel__lead">Historial operativo de marcajes automáticos.</p>
                     </div>
                     <div class="hero-panel__actions">
-                        <StatusBadge tone={marcajesQuery.isError ? 'danger' : 'success'}>
-                            {marcajesQuery.isError ? 'Endpoint degradado' : 'Endpoint operativo'}
-                        </StatusBadge>
                         <button class="terminal-button" type="button" onClick={handleRefresh} disabled={marcajesQuery.isRefetching}>
                             {marcajesQuery.isRefetching ? 'Refrescando...' : 'Refrescar ahora'}
                         </button>
-                        <span class="panel-detail">Último refresh manual: {formatRefreshTime(lastManualRefresh())}</span>
                     </div>
                 </div>
             </section>
@@ -156,10 +151,6 @@ export function DashboardPage() {
                         <div>
                             <dt>Origen</dt>
                             <dd>Cloud Function + Firestore</dd>
-                        </div>
-                        <div>
-                            <dt>Proyecto</dt>
-                            <dd>reportability-frontend-staging</dd>
                         </div>
                         <div>
                             <dt>Refresco automático</dt>
