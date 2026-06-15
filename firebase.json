@@ -1,0 +1,44 @@
+{
+    "hosting": [
+        {
+            "target": "main",
+            "public": "dist",
+            "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+            "headers": [
+                {
+                    "source": "**",
+                    "headers": [
+                        {
+                            "key": "X-Robots-Tag",
+                            "value": "noindex, nofollow, noarchive, nosnippet, noimageindex"
+                        }
+                    ]
+                },
+                {
+                    "source": "**/*.js",
+                    "headers": [
+                        {
+                            "key": "Cache-Control",
+                            "value": "no-store, no-cache, must-revalidate, max-age=0"
+                        }
+                    ]
+                },
+                {
+                    "source": "**/*.css",
+                    "headers": [
+                        {
+                            "key": "Cache-Control",
+                            "value": "no-store, no-cache, must-revalidate, max-age=0"
+                        }
+                    ]
+                }
+            ],
+            "rewrites": [
+                {
+                    "source": "**",
+                    "destination": "/index.html"
+                }
+            ]
+        }
+    ]
+}

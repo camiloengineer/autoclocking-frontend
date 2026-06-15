@@ -1,0 +1,11 @@
+{
+    "projects": {},
+    "targets": {
+        "reportability-frontend-staging": {
+            "hosting": {
+                "main": ["autocloking"]
+            }
+        }
+    },
+    "etags": {}
+}
