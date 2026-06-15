@@ -13,13 +13,13 @@ export function HistoryTable(props: HistoryTableProps) {
             <table class="history-table">
                 <thead>
                     <tr>
-                        <th>Acción</th>
-                        <th>Estado</th>
-                        <th>Fecha del registro</th>
-                        <th>Fecha CLT</th>
+                        <th>Action</th>
+                        <th>Status</th>
+                        <th>Recorded at</th>
+                        <th>CLT date</th>
                         <th>RUT</th>
-                        <th>Corrida</th>
-                        <th>Mensaje</th>
+                        <th>Run number</th>
+                        <th>Message</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,10 +33,10 @@ export function HistoryTable(props: HistoryTableProps) {
                                     <StatusBadge tone={getStatusTone(item.status)}>{formatStatusLabel(item.status)}</StatusBadge>
                                 </td>
                                 <td>{formatCreatedAt(item.created_at)}</td>
-                                <td>{item.fecha_clt || 'Sin fecha CLT'}</td>
-                                <td>{item.rut_masked || 'Oculto'}</td>
-                                <td>{item.run_number || 'Sin corrida'}</td>
-                                <td class="history-table__message">{item.message || 'Sin detalle adicional'}</td>
+                                <td>{item.fecha_clt || 'No CLT date available'}</td>
+                                <td>{item.rut_masked || 'Hidden'}</td>
+                                <td>{item.run_number || 'No run number'}</td>
+                                <td class="history-table__message">{item.message || 'No additional detail'}</td>
                             </tr>
                         )}
                     </For>

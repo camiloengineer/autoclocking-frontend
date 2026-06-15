@@ -25,11 +25,11 @@ export function DashboardPage() {
                             <img class="hero-panel__icon" src="/biohazard.svg" alt="" aria-hidden="true" />
                             <h1>AutoClocking</h1>
                         </div>
-                        <p class="hero-panel__lead">Historial operativo de marcajes automáticos.</p>
+                        <p class="hero-panel__lead">Operational history for automatic clocking events.</p>
                     </div>
                     <div class="hero-panel__actions">
                         <button class="terminal-button" type="button" onClick={handleRefresh} disabled={marcajesQuery.isRefetching}>
-                            {marcajesQuery.isRefetching ? 'Refrescando...' : 'Refrescar ahora'}
+                            {marcajesQuery.isRefetching ? 'Refreshing...' : 'Refresh now'}
                         </button>
                     </div>
                 </div>
@@ -39,8 +39,8 @@ export function DashboardPage() {
                 <article class="panel spotlight-panel">
                     <div class="panel-header">
                         <div>
-                            <span class="panel-label">Último evento detectado</span>
-                            <h2>Registro más reciente</h2>
+                            <span class="panel-label">Latest detected event</span>
+                            <h2>Most recent record</h2>
                         </div>
                         <Show when={latestRecord()}>
                             {(record) => <StatusBadge tone={getStatusTone(record().status)}>{formatStatusLabel(record().status)}</StatusBadge>}
@@ -51,37 +51,37 @@ export function DashboardPage() {
                         when={latestRecord()}
                         fallback={
                             <div class="empty-state">
-                                <span class="empty-state__icon">[ vacío ]</span>
-                                <h3>Aún no hay marcajes cargados</h3>
-                                <p>El endpoint está activo, pero en este momento no devuelve registros. La UI queda lista para mostrar el primer evento apenas exista.</p>
+                                <span class="empty-state__icon">[ empty ]</span>
+                                <h3>No clocking records loaded yet</h3>
+                                <p>The endpoint is live, but it is not returning records right now. The UI is ready to display the first event as soon as it exists.</p>
                             </div>
                         }
                     >
                         {(record) => (
                             <div class="spotlight-record">
                                 <div class="spotlight-record__row">
-                                    <span class="panel-detail">Acción</span>
+                                    <span class="panel-detail">Action</span>
                                     <StatusBadge tone={getActionTone(record().action_type)}>{formatActionLabel(record().action_type)}</StatusBadge>
                                 </div>
                                 <div class="spotlight-record__row">
-                                    <span class="panel-detail">Fecha del registro</span>
+                                    <span class="panel-detail">Recorded at</span>
                                     <strong>{formatCreatedAt(record().created_at)}</strong>
                                 </div>
                                 <div class="spotlight-record__row">
-                                    <span class="panel-detail">Fecha CLT</span>
-                                    <strong>{record().fecha_clt || 'Sin fecha CLT'}</strong>
+                                    <span class="panel-detail">CLT date</span>
+                                    <strong>{record().fecha_clt || 'No CLT date available'}</strong>
                                 </div>
                                 <div class="spotlight-record__row">
                                     <span class="panel-detail">RUT</span>
-                                    <strong>{record().rut_masked || 'Oculto'}</strong>
+                                    <strong>{record().rut_masked || 'Hidden'}</strong>
                                 </div>
                                 <div class="spotlight-record__row">
-                                    <span class="panel-detail">Corrida</span>
-                                    <strong>{record().run_number || 'Sin corrida'}</strong>
+                                    <span class="panel-detail">Run number</span>
+                                    <strong>{record().run_number || 'No run number'}</strong>
                                 </div>
                                 <div class="spotlight-record__message">
-                                    <span class="panel-detail">Mensaje</span>
-                                    <p>{record().message || 'Sin detalle adicional'}</p>
+                                    <span class="panel-detail">Message</span>
+                                    <p>{record().message || 'No additional detail'}</p>
                                 </div>
                             </div>
                         )}
@@ -92,10 +92,10 @@ export function DashboardPage() {
             <section class="panel history-panel">
                 <div class="panel-header">
                     <div>
-                        <span class="panel-label">Historial cronológico</span>
-                        <h2>Feed de marcajes</h2>
+                        <span class="panel-label">Chronological history</span>
+                        <h2>Clocking feed</h2>
                     </div>
-                    <span class="panel-detail">Orden descendente por created_at</span>
+                    <span class="panel-detail">Descending order by created_at</span>
                 </div>
 
                 <Show
@@ -104,7 +104,7 @@ export function DashboardPage() {
                         <div class="history-fallback">
                             <Show
                                 when={marcajesQuery.isLoading}
-                                fallback={<p>Sin filas disponibles todavía. Cuando existan marcajes, aparecerán aquí con su estado y detalle.</p>}
+                                fallback={<p>No rows available yet. When clocking records exist, they will appear here with their status and details.</p>}
                             >
                                 <div class="loading-grid" aria-hidden="true">
                                     <span />
@@ -122,10 +122,10 @@ export function DashboardPage() {
             <details class="panel technical-details">
                 <summary class="technical-details__summary">
                     <div>
-                        <span class="panel-label">Detalles técnicos</span>
-                        <h2>Estado del endpoint y telemetría</h2>
+                        <span class="panel-label">Technical details</span>
+                        <h2>Endpoint status and telemetry</h2>
                     </div>
-                    <span class="technical-details__hint">Expandir</span>
+                    <span class="technical-details__hint">Expand</span>
                 </summary>
 
                 <div class="technical-details__content">
@@ -133,39 +133,39 @@ export function DashboardPage() {
                         <div class="technical-stat">
                             <span class="panel-label">Endpoint</span>
                             <strong>{marcajesQuery.isError ? 'OFFLINE' : 'ONLINE'}</strong>
-                            <span class="panel-detail">{marcajesQuery.isError ? 'No hubo respuesta válida del servicio.' : 'La API respondió correctamente.'}</span>
+                            <span class="panel-detail">{marcajesQuery.isError ? 'The service did not return a valid response.' : 'The API responded correctly.'}</span>
                         </div>
                         <div class="technical-stat">
-                            <span class="panel-label">Registros visibles</span>
+                            <span class="panel-label">Visible records</span>
                             <strong>{String(recordCount())}</strong>
-                            <span class="panel-detail">Respuesta actual del endpoint GET /?limit=100.</span>
+                            <span class="panel-detail">Current response from GET /?limit=100.</span>
                         </div>
                         <div class="technical-stat">
-                            <span class="panel-label">Marcajes confirmados</span>
+                            <span class="panel-label">Confirmed records</span>
                             <strong>{String(statusSummary().success)}</strong>
-                            <span class="panel-detail">{`${statusSummary().error} con error / ${statusSummary().info} informativos`}</span>
+                            <span class="panel-detail">{`${statusSummary().error} errors / ${statusSummary().info} informational`}</span>
                         </div>
                     </div>
 
                     <dl class="system-list">
                         <div>
-                            <dt>Origen</dt>
+                            <dt>Source</dt>
                             <dd>Cloud Function + Firestore</dd>
                         </div>
                         <div>
-                            <dt>Refresco automático</dt>
-                            <dd>Cada 60 segundos y al recuperar foco</dd>
+                            <dt>Auto refresh</dt>
+                            <dd>Every 60 seconds and on focus</dd>
                         </div>
                         <div>
-                            <dt>Límite consultado</dt>
-                            <dd>100 registros</dd>
+                            <dt>Requested limit</dt>
+                            <dd>100 records</dd>
                         </div>
                     </dl>
 
                     <Show when={marcajesQuery.isError}>
                         <div class="error-banner">
-                            <strong>Error de lectura</strong>
-                            <p>{marcajesQuery.error instanceof Error ? marcajesQuery.error.message : 'No se pudo consultar el endpoint.'}</p>
+                            <strong>Read error</strong>
+                            <p>{marcajesQuery.error instanceof Error ? marcajesQuery.error.message : 'The endpoint could not be queried.'}</p>
                         </div>
                     </Show>
                 </div>

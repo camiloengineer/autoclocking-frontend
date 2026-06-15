@@ -1,53 +1,42 @@
 import type { MarcajeActionType, MarcajeItem, MarcajeStatus } from '../services/marcajes.api'
 
-const dateTimeFormatter = new Intl.DateTimeFormat('es-CL', {
+const dateTimeFormatter = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone: 'America/Santiago'
-})
-
-const timeFormatter = new Intl.DateTimeFormat('es-CL', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
     timeZone: 'America/Santiago'
 })
 
 export function formatCreatedAt(value: string) {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) {
-        return 'Sin timestamp'
+        return 'No timestamp'
     }
 
     return dateTimeFormatter.format(date)
 }
 
-export function formatRefreshTime(value: Date) {
-    return timeFormatter.format(value)
-}
-
 export function formatActionLabel(action: MarcajeActionType) {
     if (action === 'ENTRADA') {
-        return 'Entrada'
+        return 'Clock in'
     }
 
     if (action === 'SALIDA') {
-        return 'Salida'
+        return 'Clock out'
     }
 
-    return 'Feriado'
+    return 'Holiday'
 }
 
 export function formatStatusLabel(status: MarcajeStatus) {
     if (status === 'success') {
-        return 'Confirmado'
+        return 'Confirmed'
     }
 
     if (status === 'error') {
-        return 'Falló'
+        return 'Failed'
     }
 
-    return 'Informativo'
+    return 'Informational'
 }
 
 export function getStatusTone(status: MarcajeStatus) {
