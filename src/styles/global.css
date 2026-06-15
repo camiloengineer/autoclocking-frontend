@@ -1,0 +1,54 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    background:
+        linear-gradient(rgba(57, 255, 114, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(57, 255, 114, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at top, rgba(36, 128, 67, 0.18), transparent 32%),
+        var(--bg-primary);
+    background-size: 100% 3px, 3px 100%, auto, auto;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text-primary);
+    background: transparent;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.02));
+    opacity: 0.35;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+#root {
+    min-height: 100vh;
+}
+
+a {
+    color: inherit;
+}

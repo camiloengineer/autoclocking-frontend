@@ -1,0 +1,19 @@
+:root {
+    color-scheme: dark;
+    --bg-primary: #020603;
+    --bg-secondary: rgba(3, 15, 8, 0.92);
+    --bg-tertiary: rgba(6, 24, 13, 0.88);
+    --surface-border: rgba(95, 255, 135, 0.18);
+    --surface-border-strong: rgba(111, 255, 145, 0.38);
+    --text-primary: #f3fff3;
+    --text-secondary: #a8e5b0;
+    --text-dim: #76b681;
+    --accent-primary: #9bffb3;
+    --accent-secondary: #39ff72;
+    --accent-muted: rgba(57, 255, 114, 0.12);
+    --danger-primary: #ff6b8a;
+    --danger-muted: rgba(255, 107, 138, 0.14);
+    --shadow-panel: 0 0 0 1px rgba(125, 255, 155, 0.08), 0 0 24px rgba(57, 255, 114, 0.08);
+    --font-mono: 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'DejaVu Sans Mono', monospace;
+    --app-max-width: 1280px;
+}
