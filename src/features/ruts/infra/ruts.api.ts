@@ -1,19 +1,13 @@
 import type { RutsResponse, RutItem } from '../domain/rut.types'
-import { MARCAJES_DEFAULT_API_URL } from '../../marcajes/infra/marcajes.config'
 
-function getMarcajesApiUrl() {
-    return import.meta.env.VITE_MARCAJES_API_URL || MARCAJES_DEFAULT_API_URL
-}
+const RUTS_DEFAULT_API_URL = 'https://autoclocking-ruts-vg7vvkcauq-ue.a.run.app/ruts'
 
 function getRutsApiUrl() {
     if (import.meta.env.VITE_RUTS_API_URL) {
         return import.meta.env.VITE_RUTS_API_URL
     }
 
-    const url = new URL(getMarcajesApiUrl())
-    url.pathname = url.pathname.endsWith('/marcajes') ? url.pathname.replace(/\/marcajes$/, '/ruts') : '/ruts'
-    url.search = ''
-    return url.toString()
+    return RUTS_DEFAULT_API_URL
 }
 
 function normalizeItem(item: Partial<RutItem>): RutItem {
