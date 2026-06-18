@@ -4,7 +4,7 @@ import { For, Show } from 'solid-js'
 import { fetchHolidays } from '../features/holidays/infra/holidays.api'
 
 const HOLIDAYS_QUERY_KEY = ['holidays'] as const
-const DATE_FORMATTER = new Intl.DateTimeFormat('es-CL', {
+const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
     day: '2-digit',
     month: 'short'
@@ -39,8 +39,8 @@ export function HolidaysPage() {
             <section class="panel history-panel">
                 <div class="panel-header">
                     <div>
-                        <h2>Próximos feriados</h2>
-                        <p class="panel-detail">Días donde el cronjob no debería ejecutar marcajes reales.</p>
+                        <h2>Upcoming holidays</h2>
+                        <p class="panel-detail">Days where the cronjob should not perform real clock-ins.</p>
                     </div>
                     <button class="terminal-button terminal-button--icon" type="button" onClick={refreshHolidays} disabled={holidaysQuery.isFetching}>
                         <RefreshCw size={16} aria-hidden="true" />
@@ -65,8 +65,8 @@ export function HolidaysPage() {
                         fallback={
                             <div class="empty-state">
                                 <CalendarDays size={30} aria-hidden="true" />
-                                <h3>{holidaysQuery.isError ? 'No se pudieron cargar feriados' : 'No quedan feriados configurados'}</h3>
-                                <p>{holidaysQuery.isError ? 'La API de feriados no respondió con un formato válido.' : 'No hay feriados pendientes para este año.'}</p>
+                                <h3>{holidaysQuery.isError ? 'Failed to load holidays' : 'No remaining holidays configured'}</h3>
+                                <p>{holidaysQuery.isError ? 'The holidays API did not return a valid format.' : 'There are no pending holidays for this year.'}</p>
                             </div>
                         }
                     >
@@ -83,7 +83,7 @@ export function HolidaysPage() {
                                             <p>{holiday.extra || holiday.type}</p>
                                         </div>
                                         <span class={`status-badge ${holiday.inalienable ? 'status-badge--danger' : 'status-badge--neutral'}`}>
-                                            {holiday.inalienable ? 'Irrenunciable' : 'Normal'}
+                                            {holiday.inalienable ? 'Non-working' : 'Normal'}
                                         </span>
                                     </article>
                                 )}

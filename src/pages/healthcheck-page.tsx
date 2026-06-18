@@ -4,10 +4,16 @@ import { For, Show } from 'solid-js'
 import { fetchHolidays } from '../features/holidays/infra/holidays.api'
 import type { MarcajeItem } from '../features/marcajes/domain/marcaje.types'
 import { fetchMarcajes } from '../features/marcajes/infra/marcajes.api'
+import type { RutItem } from '../features/ruts/domain/rut.types'
+import { fetchRuts } from '../features/ruts/infra/ruts.api'
 
 const HEALTHCHECK_QUERY_KEY = ['healthcheck'] as const
 const HEALTHCHECK_DAYS = 30
-const CL_DATE_FORMATTER = new Intl.DateTimeFormat('es-CL', {
+const ENTRY_WINDOW_START_MINUTE = 8 * 60 + 10
+const ENTRY_DEADLINE_MINUTE = 8 * 60 + 30
+const EXIT_WINDOW_START_MINUTE = 17 * 60 + 30
+const EXIT_DEADLINE_MINUTE = 17 * 60 + 50
+const US_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
     day: '2-digit',
     month: 'short'
@@ -22,7 +28,6 @@ type HealthcheckDay = {
     message: string
     entrada: string
     salida: string
-    successfulMarks: number
 }
 
 function todayISO() {
@@ -34,7 +39,7 @@ function toISODate(date: Date) {
 }
 
 function formatDateLabel(date: string) {
-    return CL_DATE_FORMATTER.format(new Date(`${date}T12:00:00-04:00`))
+    return US_DATE_FORMATTER.format(new Date(`${date}T12:00:00-04:00`))
 }
 
 function isWeekend(date: string) {
@@ -46,8 +51,61 @@ function getMarcajeDate(item: MarcajeItem) {
     return item.fecha_clt.slice(0, 10) || item.created_at.slice(0, 10)
 }
 
-function getMarcajeTime(item: MarcajeItem) {
-    return item.fecha_clt.slice(11, 16) || 'OK'
+function getChileMinuteOfDay() {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+        timeZone: 'America/Santiago'
+    }).formatToParts(new Date())
+    const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? 0)
+    const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? 0)
+
+    return hour * 60 + minute
+}
+
+function maskRut(value: string) {
+    const normalized = value.trim()
+    if (normalized.length <= 4) {
+        return '*'.repeat(normalized.length)
+    }
+
+    return `${normalized.slice(0, 4)}${'*'.repeat(normalized.length - 4)}`
+}
+
+function normalizeRut(value: string) {
+    return value.toLowerCase().replace(/[.\-\s]/g, '')
+}
+
+async function getRutKey(value: string) {
+    const bytes = new TextEncoder().encode(normalizeRut(value))
+    const hash = await crypto.subtle.digest('SHA-256', bytes)
+    return Array.from(new Uint8Array(hash))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('')
+}
+
+function isConfirmedAction(item: MarcajeItem) {
+    return item.status === 'success' || (item.status === 'info' && /^Duplicate clock/i.test(item.message))
+}
+
+function isExpectedRutRecord(item: MarcajeItem, expectedRutKeys: Set<string>, expectedMaskedRuts: Set<string>) {
+    return item.rut_key ? expectedRutKeys.has(item.rut_key) : expectedMaskedRuts.has(item.rut_masked)
+}
+
+function countConfirmedRuts(records: MarcajeItem[], actionType: MarcajeItem['action_type'], expectedRutKeys: Set<string>, expectedMaskedRuts: Set<string>) {
+    const markedRuts = new Set(
+        records
+            .filter(
+                (item) =>
+                    item.action_type === actionType &&
+                    isConfirmedAction(item) &&
+                    isExpectedRutRecord(item, expectedRutKeys, expectedMaskedRuts)
+            )
+            .map((item) => item.rut_key || item.rut_masked)
+    )
+
+    return markedRuts.size
 }
 
 function getLastPastDates(days: number) {
@@ -63,8 +121,15 @@ function getLastPastDates(days: number) {
     return dates.reverse()
 }
 
-function buildHealthcheckDays(marcajes: MarcajeItem[], holidayDates: Set<string>): HealthcheckDay[] {
-    const marcajeDates = marcajes.map(getMarcajeDate).filter(Boolean)
+function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutItem[], expectedRutKeys: Set<string>, holidayDates: Set<string>): HealthcheckDay[] {
+    const expectedMaskedRuts = new Set(activeRuts.map((rut) => maskRut(rut.rut)))
+    const expectedCount = activeRuts.length
+    const today = todayISO()
+    const currentMinute = getChileMinuteOfDay()
+    const marcajeDates = marcajes
+        .filter((item) => item.action_type !== 'FERIADO' && isExpectedRutRecord(item, expectedRutKeys, expectedMaskedRuts))
+        .map(getMarcajeDate)
+        .filter(Boolean)
     const firstMarcajeDate = marcajeDates.length > 0 ? marcajeDates.reduce((first, date) => (date < first ? date : first), marcajeDates[0]) : ''
     const recordsByDate = new Map<string, MarcajeItem[]>()
 
@@ -78,33 +143,97 @@ function buildHealthcheckDays(marcajes: MarcajeItem[], holidayDates: Set<string>
     return [...getLastPastDates(HEALTHCHECK_DAYS - 1), todayISO()]
         .filter((date) => !isWeekend(date) && !holidayDates.has(date))
         .map((date) => {
-            if (!firstMarcajeDate || date < firstMarcajeDate) {
+            if (expectedCount === 0) {
                 return {
                     date,
                     label: formatDateLabel(date),
                     status: 'no-history',
-                    message: 'Sin historial',
-                    entrada: 'Sin dato',
-                    salida: 'Sin dato',
-                    successfulMarks: 0
+                    message: 'No active RUTs',
+                    entrada: 'No data',
+                    salida: 'No data'
+                }
+            }
+
+            if (date !== today && (!firstMarcajeDate || date < firstMarcajeDate)) {
+                return {
+                    date,
+                    label: formatDateLabel(date),
+                    status: 'no-history',
+                    message: 'No history',
+                    entrada: 'No data',
+                    salida: 'No data'
                 }
             }
 
             const records = recordsByDate.get(date) ?? []
-            const hasError = records.some((item) => item.status === 'error')
-            const entrada = records.find((item) => item.action_type === 'ENTRADA' && item.status === 'success')
-            const salida = records.find((item) => item.action_type === 'SALIDA' && item.status === 'success')
-            const successfulMarks = records.filter((item) => item.status === 'success' && (item.action_type === 'ENTRADA' || item.action_type === 'SALIDA')).length
+            const entradaCount = countConfirmedRuts(records, 'ENTRADA', expectedRutKeys, expectedMaskedRuts)
+            const salidaCount = countConfirmedRuts(records, 'SALIDA', expectedRutKeys, expectedMaskedRuts)
+            const entrada = `${entradaCount}/${expectedCount}`
+            const salida = `${salidaCount}/${expectedCount}`
 
-            if (!hasError && successfulMarks >= 2) {
+            if (date === today && currentMinute < ENTRY_WINDOW_START_MINUTE) {
+                return {
+                    date,
+                    label: formatDateLabel(date),
+                    status: 'no-history',
+                    message: "Entry window hasn't started",
+                    entrada,
+                    salida
+                }
+            }
+
+            if (date === today && currentMinute < ENTRY_DEADLINE_MINUTE) {
                 return {
                     date,
                     label: formatDateLabel(date),
                     status: 'ok',
-                    message: 'Dos marcajes OK',
-                    entrada: entrada ? getMarcajeTime(entrada) : 'OK',
-                    salida: salida ? getMarcajeTime(salida) : 'OK',
-                    successfulMarks
+                    message: 'Entry window in progress',
+                    entrada,
+                    salida
+                }
+            }
+
+            if (entradaCount < expectedCount) {
+                return {
+                    date,
+                    label: formatDateLabel(date),
+                    status: 'error',
+                    message: 'Entry incomplete after 08:30',
+                    entrada,
+                    salida
+                }
+            }
+
+            if (date === today && currentMinute < EXIT_WINDOW_START_MINUTE) {
+                return {
+                    date,
+                    label: formatDateLabel(date),
+                    status: 'ok',
+                    message: 'Entry complete; exit pending',
+                    entrada,
+                    salida
+                }
+            }
+
+            if (date === today && currentMinute < EXIT_DEADLINE_MINUTE) {
+                return {
+                    date,
+                    label: formatDateLabel(date),
+                    status: 'ok',
+                    message: 'Exit window in progress',
+                    entrada,
+                    salida
+                }
+            }
+
+            if (salidaCount === expectedCount) {
+                return {
+                    date,
+                    label: formatDateLabel(date),
+                    status: 'ok',
+                    message: 'Entry and exit complete',
+                    entrada,
+                    salida
                 }
             }
 
@@ -112,10 +241,9 @@ function buildHealthcheckDays(marcajes: MarcajeItem[], holidayDates: Set<string>
                 date,
                 label: formatDateLabel(date),
                 status: 'error',
-                message: hasError ? 'Con error registrado' : successfulMarks === 1 ? 'Un marcaje registrado' : 'Sin marcajes',
-                entrada: entrada ? getMarcajeTime(entrada) : 'Falta',
-                salida: salida ? getMarcajeTime(salida) : 'Falta',
-                successfulMarks
+                message: 'Exit incomplete after 17:50',
+                entrada,
+                salida
             }
         })
 }
@@ -125,12 +253,8 @@ function getHealthSegmentClass(day: HealthcheckDay) {
         return 'healthcheck-segment healthcheck-segment--unknown'
     }
 
-    if (day.successfulMarks >= 2) {
+    if (day.status === 'ok') {
         return 'healthcheck-segment healthcheck-segment--ok'
-    }
-
-    if (day.successfulMarks === 1) {
-        return 'healthcheck-segment healthcheck-segment--partial'
     }
 
     return 'healthcheck-segment healthcheck-segment--down'
@@ -142,7 +266,7 @@ function getUptimeValue(days: HealthcheckDay[]) {
         return '0.00'
     }
 
-    const okDays = measuredDays.filter((day) => day.successfulMarks >= 2).length
+    const okDays = measuredDays.filter((day) => day.status === 'ok').length
     return ((okDays / measuredDays.length) * 100).toFixed(2)
 }
 
@@ -150,10 +274,12 @@ export function HealthcheckPage() {
     const healthcheckQuery = createQuery(() => ({
         queryKey: HEALTHCHECK_QUERY_KEY,
         queryFn: async () => {
-            const [marcajes, holidays] = await Promise.all([fetchMarcajes(500), fetchHolidays()])
+            const [marcajes, holidays, ruts] = await Promise.all([fetchMarcajes(500), fetchHolidays(), fetchRuts()])
+            const activeRuts = ruts.items.filter((rut) => rut.active)
+            const rutKeys = await Promise.all(activeRuts.map((rut) => getRutKey(rut.rut)))
             const holidayDates = new Set(holidays.map((holiday) => holiday.date))
 
-            return buildHealthcheckDays(marcajes.items, holidayDates)
+            return buildHealthcheckDays(marcajes.items, activeRuts, new Set(rutKeys), holidayDates)
         }
     }))
 
@@ -166,8 +292,8 @@ export function HealthcheckPage() {
             <section class="panel history-panel">
                 <div class="panel-header">
                     <div>
-                        <h2>Healthcheck 30 días</h2>
-                        <p class="panel-detail">Solo días laborales pasados, sin fines de semana, feriados ni hoy.</p>
+                        <h2>30-day healthcheck</h2>
+                        <p class="panel-detail">Working days: entry closed at 08:30 and exit closed at 17:50.</p>
                     </div>
                     <button class="terminal-button terminal-button--icon" type="button" onClick={refreshHealthcheck} disabled={healthcheckQuery.isFetching}>
                         <RefreshCw size={16} aria-hidden="true" />
@@ -191,36 +317,35 @@ export function HealthcheckPage() {
                         when={!healthcheckQuery.isError && (healthcheckQuery.data?.length ?? 0) > 0}
                         fallback={
                             <div class="empty-state">
-                                <h3>{healthcheckQuery.isError ? 'No se pudo calcular el healthcheck' : 'Sin días laborales evaluables'}</h3>
-                                <p>{healthcheckQuery.isError ? 'Marcajes o feriados no respondieron con un formato válido.' : 'La ventana actual no contiene días laborales pasados.'}</p>
+                                <h3>{healthcheckQuery.isError ? 'Failed to calculate healthcheck' : 'No evaluable working days'}</h3>
+                                <p>{healthcheckQuery.isError ? 'Clock-ins or holidays API did not return a valid format.' : 'The current window does not contain past working days.'}</p>
                             </div>
                         }
                     >
                         <div class="healthcheck-uptime">
                             <div class="healthcheck-uptime__topline">
-                                <strong>{getUptimeValue(healthcheckQuery.data ?? [])}% completos</strong>
-                                <span>Últimos 30 días laborales evaluables</span>
+                                <strong>{getUptimeValue(healthcheckQuery.data ?? [])}% complete</strong>
+                                <span>Last 30 evaluable working days</span>
                             </div>
                             <div class="healthcheck-segments" aria-label="Healthcheck por día laboral">
                                 <For each={healthcheckQuery.data ?? []}>
                                     {(day) => (
                                         <span
                                             class={getHealthSegmentClass(day)}
-                                            title={`${day.label} ${day.date}: ${day.message}. Entrada: ${day.entrada}. Salida: ${day.salida}.`}
+                                            title={`${day.label} ${day.date}: ${day.message}. Entry: ${day.entrada}. Exit: ${day.salida}.`}
                                             aria-label={`${day.date}: ${day.message}`}
                                         />
                                     )}
                                 </For>
                             </div>
                             <div class="healthcheck-uptime__axis">
-                                <span>{healthcheckQuery.data?.[0]?.date ?? 'Sin datos'}</span>
-                                <span>Hoy</span>
+                                <span>{healthcheckQuery.data?.[0]?.date ?? 'No data'}</span>
+                                <span>Today</span>
                             </div>
                             <div class="healthcheck-legend">
-                                <span><i class="healthcheck-segment--ok" /> 2 marcajes</span>
-                                <span><i class="healthcheck-segment--partial" /> 1 marcaje</span>
-                                <span><i class="healthcheck-segment--down" /> 0 marcajes</span>
-                                <span><i class="healthcheck-segment--unknown" /> sin historial</span>
+                                <span><i class="healthcheck-segment--ok" /> compliant</span>
+                                <span><i class="healthcheck-segment--down" /> incomplete</span>
+                                <span><i class="healthcheck-segment--unknown" /> not evaluable</span>
                             </div>
                         </div>
                     </Show>

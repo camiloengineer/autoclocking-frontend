@@ -1,6 +1,6 @@
-import { For, Show } from 'solid-js'
+import { For } from 'solid-js'
 import type { MarcajeItem } from '../domain/marcaje.types'
-import { formatActionLabel, formatCreatedAt, formatMessage, formatMessageSummary, formatStatusLabel, getActionTone, getStatusTone, hasDetails } from '../domain/marcaje.formatters'
+import { formatActionLabel, formatCreatedAt, formatMessageSummary, formatStatusLabel, getActionTone, getStatusTone } from '../domain/marcaje.formatters'
 import { StatusBadge } from './status-badge'
 
 type HistoryTableProps = {
@@ -36,12 +36,6 @@ export function HistoryTable(props: HistoryTableProps) {
                                 <td>{item.rut_masked || 'Hidden'}</td>
                                 <td class="history-table__message">
                                     <div class="history-table__message-summary">{formatMessageSummary(item.message || 'No additional detail', item.rut_masked)}</div>
-                                    <Show when={hasDetails(item.details)}>
-                                        <details class="history-table__details">
-                                            <summary>View details</summary>
-                                            <pre>{formatMessage(item.details, item.rut_masked)}</pre>
-                                        </details>
-                                    </Show>
                                 </td>
                             </tr>
                         )}
