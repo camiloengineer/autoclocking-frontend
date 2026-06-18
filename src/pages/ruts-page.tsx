@@ -4,6 +4,29 @@ import { createQuery, useQueryClient } from '@tanstack/solid-query'
 import { deleteRut, fetchRuts, saveRut, updateRutActive } from '../features/ruts/infra/ruts.api'
 
 const RUTS_QUERY_KEY = ['ruts'] as const
+const UPDATED_AT_FORMATTER = new Intl.DateTimeFormat('es-CL', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'America/Santiago'
+})
+
+function maskRut(value: string) {
+    const normalized = value.trim()
+    if (normalized.length <= 4) {
+        return '*'.repeat(normalized.length)
+    }
+
+    return `${normalized.slice(0, 4)}${'*'.repeat(normalized.length - 4)}`
+}
+
+function formatUpdatedAt(value: string) {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) {
+        return 'No timestamp'
+    }
+
+    return UPDATED_AT_FORMATTER.format(date)
+}
 
 export function RutsPage() {
     const queryClient = useQueryClient()
@@ -91,7 +114,7 @@ export function RutsPage() {
                 <form class="rut-form" onSubmit={handleSubmit}>
                     <label class="rut-form__field">
                         <span>RUT</span>
-                        <input value={rut()} onInput={(event) => setRut(event.currentTarget.value)} placeholder="16913376k" required />
+                        <input value={rut()} onInput={(event) => setRut(event.currentTarget.value)} placeholder="12345676-K" required />
                     </label>
                     <label class="rut-form__check">
                         <input type="checkbox" checked={active()} onChange={(event) => setActive(event.currentTarget.checked)} />
@@ -142,7 +165,7 @@ export function RutsPage() {
                                     <For each={items()}>
                                         {(item) => (
                                             <tr>
-                                                <td>{item.rut}</td>
+                                                <td>{maskRut(item.rut)}</td>
                                                 <td>
                                                     <label class="rut-toggle">
                                                         <input
@@ -154,12 +177,12 @@ export function RutsPage() {
                                                         <span>{item.active ? 'Active' : 'Inactive'}</span>
                                                     </label>
                                                 </td>
-                                                <td>{item.updated_at || 'No timestamp'}</td>
+                                                <td>{formatUpdatedAt(item.updated_at)}</td>
                                                 <td>
                                                     <button
                                                         class="icon-button"
                                                         type="button"
-                                                        aria-label={`Delete ${item.rut}`}
+                                                        aria-label={`Delete ${maskRut(item.rut)}`}
                                                         disabled={pendingAction() === `delete:${item.rut}`}
                                                         onClick={() => handleDelete(item.rut)}
                                                     >
