@@ -1,4 +1,4 @@
-import type { MarcajeActionType, MarcajeItem, MarcajeStatus } from './marcaje.types'
+import type { MarcajeActionType, MarcajeStatus } from './marcaje.types'
 import { MARCAJES_ACTION_LABELS, MARCAJES_ACTION_TONES, MARCAJES_STATUS_LABELS, MARCAJES_STATUS_TONES } from './marcaje.constants'
 
 const dateTimeFormatter = new Intl.DateTimeFormat('en-US', {
@@ -61,6 +61,11 @@ export function formatMessageSummary(value: string, rutMasked?: string) {
         .map((line) => line.trim())
         .find((line) => line.length > 0) || 'No additional detail'
 
+    const duplicateDirectionMatch = summary.match(/^Duplicate clocking prevented$/i)
+    if (duplicateDirectionMatch) {
+        return 'Same direction blocked'
+    }
+
     const successfulAtMatch = summary.match(/^\s*✅\s*(?:SALIDA|ENTRADA)\s+successful at\s+([0-9]{2}:[0-9]{2}:[0-9]{2})(?:\s*\(([^)]+)\))?/i)
 
     if (successfulAtMatch) {
@@ -75,8 +80,4 @@ export function formatMessageSummary(value: string, rutMasked?: string) {
 
 export function hasDetails(value: string) {
     return value.trim().length > 0
-}
-
-export function filterConfirmedRecords(items: MarcajeItem[]) {
-    return items.filter((item) => item.status === 'success')
 }

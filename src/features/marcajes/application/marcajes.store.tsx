@@ -1,13 +1,11 @@
 import { createContext, createMemo, useContext, type Accessor, type JSX } from 'solid-js'
 import { createQuery } from '@tanstack/solid-query'
-import { filterConfirmedRecords } from '../domain/marcaje.formatters'
 import type { MarcajeItem } from '../domain/marcaje.types'
 import { fetchMarcajes } from '../infra/marcajes.api'
 import { MARCAJES_QUERY_KEY, MARCAJES_REFRESH_INTERVAL_MS } from './marcajes.constants'
 
 type MarcajesStore = {
     records: Accessor<MarcajeItem[]>
-    confirmedRecords: Accessor<MarcajeItem[]>
     refresh: () => Promise<unknown>
     isLoading: Accessor<boolean>
     isRefetching: Accessor<boolean>
@@ -27,13 +25,11 @@ export function MarcajesProvider(props: MarcajesProviderProps) {
     }))
 
     const records = createMemo(() => marcajesQuery.data?.items ?? [])
-    const confirmedRecords = createMemo(() => filterConfirmedRecords(records()))
     const isLoading = createMemo(() => marcajesQuery.isLoading)
     const isRefetching = createMemo(() => marcajesQuery.isRefetching)
 
     const store: MarcajesStore = {
         records,
-        confirmedRecords,
         refresh: () => marcajesQuery.refetch(),
         isLoading,
         isRefetching

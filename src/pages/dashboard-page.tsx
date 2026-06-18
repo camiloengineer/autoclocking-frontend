@@ -31,18 +31,18 @@ export function DashboardPage() {
             <section class="panel history-panel">
                 <div class="panel-header">
                     <div>
-                        <h2>Confirmed clocking feed</h2>
-                        <p class="panel-detail">Clocking in Buk with a human time buffer.</p>
+                        <h2>Clocking feed</h2>
+                        <p class="panel-detail">Confirmed actions and same-direction warnings from the backend.</p>
                     </div>
                 </div>
 
                 <Show
-                    when={!marcajesStore.isLoading() && marcajesStore.confirmedRecords().length > 0}
+                    when={!marcajesStore.isLoading() && marcajesStore.records().length > 0}
                     fallback={
                         <div class="history-fallback">
                             <Show
                                 when={marcajesStore.isLoading()}
-                                fallback={<p>No confirmed records available yet. When a success status exists, it will appear here.</p>}
+                                fallback={<p>No clocking records available yet. Confirmations and same-direction warnings will appear here.</p>}
                             >
                                 <div class="loading-grid" aria-hidden="true">
                                     <span />
@@ -53,7 +53,7 @@ export function DashboardPage() {
                         </div>
                     }
                 >
-                    <HistoryTable items={marcajesStore.confirmedRecords()} />
+                    <HistoryTable items={marcajesStore.records()} />
                 </Show>
             </section>
         </main>
