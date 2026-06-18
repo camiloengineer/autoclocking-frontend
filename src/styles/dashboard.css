@@ -39,8 +39,9 @@
 
 .app-header__tabs button:hover,
 .app-header__tab--active {
-    color: var(--accent-primary);
-    background: rgba(57, 255, 114, 0.08);
+    color: black !important;
+    background: var(--text-secondary) !important;
+    box-shadow: inset 0 0 0 1px rgba(150, 255, 188, 0.18);
 }
 
 .app-header__links {

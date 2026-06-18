@@ -32,7 +32,7 @@ export function DashboardPage() {
                 <div class="panel-header">
                     <div>
                         <h2>Clocking feed</h2>
-                        <p class="panel-detail">Confirmed actions and same-direction warnings from the backend.</p>
+                        <p class="panel-detail">Random delay of 1 to 20 minutes per RUT before execution</p>
                     </div>
                 </div>
 
