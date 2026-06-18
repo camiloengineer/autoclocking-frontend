@@ -1,4 +1,4 @@
-import type { JSX } from 'solid-js'
+import { createMemo, type JSX } from 'solid-js'
 
 type StatusBadgeProps = {
     tone: 'success' | 'danger' | 'neutral' | 'accent'
@@ -7,7 +7,8 @@ type StatusBadgeProps = {
 }
 
 export function StatusBadge(props: StatusBadgeProps) {
-    const variant = props.variant ?? 'status'
+    const variant = createMemo(() => props.variant ?? 'status')
+    const className = createMemo(() => `status-badge status-badge--${variant()} status-badge--${props.tone}`)
 
-    return <span class={`status-badge status-badge--${variant} status-badge--${props.tone}`}>{props.children}</span>
+    return <span class={className()}>{props.children}</span>
 }

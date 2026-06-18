@@ -1,5 +1,6 @@
-import { MARCAJES_DEFAULT_API_URL, MARCAJES_DEFAULT_LIMIT } from '../domain/marcaje.constants'
+import { MARCAJES_DEFAULT_LIMIT } from '../application/marcajes.constants'
 import type { MarcajeActionType, MarcajesResponse, MarcajeStatus } from '../domain/marcaje.types'
+import { MARCAJES_DEFAULT_API_URL } from './marcajes.config'
 
 function getApiUrl() {
     return import.meta.env.VITE_MARCAJES_API_URL || MARCAJES_DEFAULT_API_URL

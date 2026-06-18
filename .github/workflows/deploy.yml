@@ -16,6 +16,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY_JSON }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -25,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint application
+        run: npm run lint
+
       - name: Build application
         run: npm run build
 
@@ -32,6 +40,4 @@ jobs:
         run: npm install --global firebase-tools
 
       - name: Deploy to Firebase Hosting
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: firebase deploy --only hosting:main --project reportability-frontend-staging --token "$FIREBASE_TOKEN"
+        run: firebase deploy --only hosting:main --project reportability-frontend-staging

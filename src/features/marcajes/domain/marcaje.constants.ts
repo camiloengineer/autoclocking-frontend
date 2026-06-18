@@ -1,9 +1,5 @@
 import type { MarcajeActionType, MarcajeStatus } from './marcaje.types'
 
-export const MARCAJES_QUERY_KEY = ['marcajes'] as const
-export const MARCAJES_DEFAULT_LIMIT = 100
-export const MARCAJES_REFRESH_INTERVAL_MS = 60_000
-export const MARCAJES_DEFAULT_API_URL = 'https://marcajes-vg7vvkcauq-ue.a.run.app'
 export const MARCAJES_CONFIRMED_STATUS: MarcajeStatus = 'success'
 
 export const MARCAJES_ACTION_LABELS: Record<MarcajeActionType, string> = {
