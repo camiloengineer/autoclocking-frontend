@@ -4,7 +4,7 @@ import { createQuery, useQueryClient } from '@tanstack/solid-query'
 import { deleteRut, fetchRuts, saveRut, updateRutActive } from '../features/ruts/infra/ruts.api'
 
 const RUTS_QUERY_KEY = ['ruts'] as const
-const UPDATED_AT_FORMATTER = new Intl.DateTimeFormat('es-CL', {
+const UPDATED_AT_FORMATTER = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'America/Santiago'

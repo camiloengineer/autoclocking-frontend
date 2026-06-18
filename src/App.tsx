@@ -22,13 +22,13 @@ function App() {
             <header class="app-header">
                 <nav class="app-header__tabs" aria-label="Application sections">
                     <button classList={{ 'app-header__tab--active': activePage() === 'dashboard' }} type="button" onClick={() => setActivePage('dashboard')}>
-                        Marcajes
+                        Clock-ins
                     </button>
                     <button classList={{ 'app-header__tab--active': activePage() === 'ruts' }} type="button" onClick={() => setActivePage('ruts')}>
                         RUTs
                     </button>
                     <button classList={{ 'app-header__tab--active': activePage() === 'holidays' }} type="button" onClick={() => setActivePage('holidays')}>
-                        Feriados
+                        Holidays
                     </button>
                     <button classList={{ 'app-header__tab--active': activePage() === 'healthcheck' }} type="button" onClick={() => setActivePage('healthcheck')}>
                         Healthcheck
