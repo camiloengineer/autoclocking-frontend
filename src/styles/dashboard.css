@@ -6,7 +6,7 @@
 
 .app-header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     gap: 16px;
     padding: 0 4px 18px;
@@ -15,6 +15,32 @@
     letter-spacing: 0.14em;
     font-size: 0.8rem;
     font-weight: 700;
+}
+
+.app-header__tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px;
+    border: 1px solid rgba(111, 255, 145, 0.14);
+    background: rgba(6, 22, 12, 0.76);
+}
+
+.app-header__tabs button {
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 9px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+.app-header__tabs button:hover,
+.app-header__tab--active {
+    color: var(--accent-primary);
+    background: rgba(57, 255, 114, 0.08);
 }
 
 .app-header__links {
@@ -164,6 +190,13 @@
     opacity: 0.6;
     transform: none;
     cursor: wait;
+}
+
+.terminal-button--icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .panel-label {
@@ -350,6 +383,112 @@
     line-height: 1.6;
 }
 
+.rut-form {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto auto;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 18px;
+}
+
+.rut-form__field {
+    display: grid;
+    gap: 8px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.rut-form__field input {
+    width: 100%;
+    border: 1px solid rgba(125, 255, 155, 0.16);
+    background: rgba(7, 24, 12, 0.86);
+    color: var(--text-primary);
+    padding: 12px 14px;
+    letter-spacing: 0;
+}
+
+.rut-form__field input:focus {
+    outline: 2px solid rgba(125, 255, 155, 0.26);
+    outline-offset: 2px;
+}
+
+.rut-form__check,
+.rut-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.rut-form__check {
+    padding: 13px 10px;
+}
+
+.rut-form__check input,
+.rut-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+}
+
+.rut-error {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 107, 138, 0.32);
+    background: rgba(255, 107, 138, 0.1);
+    color: #ff9db3;
+    font-weight: 800;
+}
+
+.rut-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+    padding: 16px;
+    border: 1px solid rgba(125, 255, 155, 0.1);
+    background: rgba(6, 22, 12, 0.72);
+}
+
+.rut-summary strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.rut-table {
+    min-width: 760px;
+}
+
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255, 107, 138, 0.28);
+    background: rgba(255, 107, 138, 0.08);
+    color: #ff9db3;
+}
+
+.icon-button:hover {
+    border-color: rgba(255, 157, 179, 0.78);
+    background: rgba(255, 107, 138, 0.14);
+}
+
+.icon-button:disabled {
+    opacity: 0.56;
+    cursor: wait;
+}
+
 .loading-grid {
     display: grid;
     gap: 12px;
@@ -394,6 +533,15 @@
 
     .app-header__links {
         justify-content: flex-start;
+    }
+
+    .rut-form {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .rut-summary {
+        grid-template-columns: 1fr;
     }
 
     .hero-panel,
