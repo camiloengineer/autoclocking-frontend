@@ -468,6 +468,142 @@
     min-width: 760px;
 }
 
+.holiday-list {
+    display: grid;
+    gap: 10px;
+}
+
+.holiday-item {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.28fr) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid rgba(125, 255, 155, 0.1);
+    background: rgba(6, 22, 12, 0.72);
+}
+
+.holiday-item__date,
+.holiday-item__body {
+    display: grid;
+    gap: 5px;
+}
+
+.holiday-item__date span {
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.holiday-item__date strong {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.holiday-item__body h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.holiday-item__body p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.healthcheck-uptime {
+    display: grid;
+    gap: 18px;
+    padding: 18px;
+    border: 1px solid rgba(125, 255, 155, 0.1);
+    background: rgba(6, 22, 12, 0.72);
+}
+
+.healthcheck-uptime__topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: baseline;
+}
+
+.healthcheck-uptime__topline strong {
+    color: var(--text-primary);
+    font-size: 1.55rem;
+    font-weight: 800;
+}
+
+.healthcheck-uptime__topline span,
+.healthcheck-uptime__axis {
+    color: var(--text-dim);
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.healthcheck-segments {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8px, 1fr));
+    gap: 6px;
+    align-items: end;
+    min-height: 74px;
+}
+
+.healthcheck-segment {
+    display: block;
+    height: 68px;
+    min-width: 8px;
+    border-radius: 2px;
+}
+
+.healthcheck-segment--ok {
+    background: #42c83f;
+}
+
+.healthcheck-segment--partial {
+    background: #f5a331;
+}
+
+.healthcheck-segment--down {
+    background: #f43f5e;
+}
+
+.healthcheck-segment--unknown {
+    background: #6b7280;
+}
+
+.healthcheck-uptime__axis,
+.healthcheck-legend {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.healthcheck-legend {
+    justify-content: flex-start;
+}
+
+.healthcheck-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.healthcheck-legend i {
+    width: 10px;
+    height: 18px;
+    border-radius: 2px;
+}
+
 .icon-button {
     display: inline-flex;
     align-items: center;
@@ -542,6 +678,15 @@
 
     .rut-summary {
         grid-template-columns: 1fr;
+    }
+
+    .holiday-item {
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    .healthcheck-uptime__topline {
+        display: grid;
     }
 
     .hero-panel,

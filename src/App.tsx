@@ -1,7 +1,9 @@
 import { SquareArrowOutUpRight } from 'lucide-solid'
-import { createSignal } from 'solid-js'
+import { Show, createSignal } from 'solid-js'
 import { siGithub } from 'simple-icons'
 import { DashboardPage } from './pages/dashboard-page'
+import { HealthcheckPage } from './pages/healthcheck-page'
+import { HolidaysPage } from './pages/holidays-page'
 import { RutsPage } from './pages/ruts-page'
 
 function GithubMark() {
@@ -13,7 +15,7 @@ function GithubMark() {
 }
 
 function App() {
-    const [activePage, setActivePage] = createSignal<'dashboard' | 'ruts'>('dashboard')
+    const [activePage, setActivePage] = createSignal<'dashboard' | 'ruts' | 'holidays' | 'healthcheck'>('dashboard')
 
     return (
         <div class="app-shell">
@@ -24,6 +26,12 @@ function App() {
                     </button>
                     <button classList={{ 'app-header__tab--active': activePage() === 'ruts' }} type="button" onClick={() => setActivePage('ruts')}>
                         RUTs
+                    </button>
+                    <button classList={{ 'app-header__tab--active': activePage() === 'holidays' }} type="button" onClick={() => setActivePage('holidays')}>
+                        Feriados
+                    </button>
+                    <button classList={{ 'app-header__tab--active': activePage() === 'healthcheck' }} type="button" onClick={() => setActivePage('healthcheck')}>
+                        Healthcheck
                     </button>
                 </nav>
                 <nav class="app-header__links" aria-label="Project repositories">
@@ -39,7 +47,18 @@ function App() {
                     </a>
                 </nav>
             </header>
-            {activePage() === 'dashboard' ? <DashboardPage /> : <RutsPage />}
+            <Show when={activePage() === 'dashboard'}>
+                <DashboardPage />
+            </Show>
+            <Show when={activePage() === 'ruts'}>
+                <RutsPage />
+            </Show>
+            <Show when={activePage() === 'holidays'}>
+                <HolidaysPage />
+            </Show>
+            <Show when={activePage() === 'healthcheck'}>
+                <HealthcheckPage />
+            </Show>
         </div>
     )
 }
