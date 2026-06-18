@@ -1,30 +1,11 @@
-export type MarcajeActionType = 'ENTRADA' | 'SALIDA' | 'FERIADO'
-export type MarcajeStatus = 'success' | 'error' | 'info'
-
-export type MarcajeItem = {
-    id: string
-    action_type: MarcajeActionType
-    status: MarcajeStatus
-    message: string
-    rut_masked: string
-    run_number: string
-    fecha_clt: string
-    created_at: string
-}
-
-export type MarcajesResponse = {
-    count: number
-    items: MarcajeItem[]
-}
-
-const DEFAULT_API_URL = 'https://marcajes-vg7vvkcauq-ue.a.run.app'
-const DEFAULT_LIMIT = 100
+import { MARCAJES_DEFAULT_API_URL, MARCAJES_DEFAULT_LIMIT } from '../domain/marcaje.constants'
+import type { MarcajeActionType, MarcajesResponse, MarcajeStatus } from '../domain/marcaje.types'
 
 function getApiUrl() {
-    return import.meta.env.VITE_MARCAJES_API_URL || DEFAULT_API_URL
+    return import.meta.env.VITE_MARCAJES_API_URL || MARCAJES_DEFAULT_API_URL
 }
 
-export async function fetchMarcajes(limit = DEFAULT_LIMIT): Promise<MarcajesResponse> {
+export async function fetchMarcajes(limit = MARCAJES_DEFAULT_LIMIT): Promise<MarcajesResponse> {
     const requestUrl = new URL(getApiUrl())
     requestUrl.searchParams.set('limit', String(limit))
 
@@ -51,6 +32,7 @@ export async function fetchMarcajes(limit = DEFAULT_LIMIT): Promise<MarcajesResp
             action_type: item.action_type as MarcajeActionType,
             status: item.status as MarcajeStatus,
             message: String(item.message ?? ''),
+            details: String(item.details ?? ''),
             rut_masked: String(item.rut_masked ?? ''),
             run_number: String(item.run_number ?? ''),
             fecha_clt: String(item.fecha_clt ?? ''),
