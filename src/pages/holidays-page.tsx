@@ -1,77 +1,40 @@
-import { createQuery } from '@tanstack/solid-query'
-import { CalendarDays, RefreshCw } from 'lucide-solid'
+import { CalendarDays } from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import { fetchHolidays } from '../features/holidays/infra/holidays.api'
-
-const HOLIDAYS_QUERY_KEY = ['holidays'] as const
-const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short'
-})
-
-function todayISO() {
-    return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' })
-}
-
-function formatHolidayDate(date: string) {
-    const parsed = new Date(`${date}T12:00:00-04:00`)
-    return DATE_FORMATTER.format(parsed)
-}
+import { EmptyState } from '../components/ui/empty-state'
+import { LoadingState } from '../components/ui/loading-state'
+import { PanelHeader } from '../components/ui/panel-header'
+import { RefreshButton } from '../components/ui/refresh-button'
+import { useHolidaysPage } from '../features/holidays/application/use-holidays-page'
+import { formatHolidayDate } from '../features/holidays/domain/holiday.formatters'
 
 export function HolidaysPage() {
-    const holidaysQuery = createQuery(() => ({
-        queryKey: HOLIDAYS_QUERY_KEY,
-        queryFn: () => fetchHolidays()
-    }))
-
-    const upcomingHolidays = () => {
-        const today = todayISO()
-        return (holidaysQuery.data ?? []).filter((holiday) => holiday.date >= today).sort((left, right) => left.date.localeCompare(right.date))
-    }
-
-    const refreshHolidays = async () => {
-        await holidaysQuery.refetch()
-    }
+    const holidaysPage = useHolidaysPage()
 
     return (
         <main class="dashboard-shell">
             <section class="panel history-panel">
-                <div class="panel-header">
-                    <div>
-                        <h2>Upcoming holidays</h2>
-                        <p class="panel-detail">Days where the cronjob should not perform real clock-ins.</p>
-                    </div>
-                    <button class="terminal-button terminal-button--icon" type="button" onClick={refreshHolidays} disabled={holidaysQuery.isFetching}>
-                        <RefreshCw size={16} aria-hidden="true" />
-                        <span>{holidaysQuery.isFetching ? 'Refreshing' : 'Refresh'}</span>
-                    </button>
-                </div>
+                <PanelHeader
+                    title="Upcoming holidays"
+                    detail="Days where the cronjob should not perform real clock-ins."
+                    action={<RefreshButton busy={holidaysPage.isFetching()} onClick={holidaysPage.refreshHolidays} />}
+                />
 
                 <Show
-                    when={!holidaysQuery.isLoading}
-                    fallback={
-                        <div class="history-fallback">
-                            <div class="loading-grid" aria-hidden="true">
-                                <span />
-                                <span />
-                                <span />
-                            </div>
-                        </div>
-                    }
+                    when={!holidaysPage.isLoading()}
+                    fallback={<LoadingState />}
                 >
                     <Show
-                        when={!holidaysQuery.isError && upcomingHolidays().length > 0}
+                        when={!holidaysPage.isError() && holidaysPage.upcomingHolidays().length > 0}
                         fallback={
-                            <div class="empty-state">
-                                <CalendarDays size={30} aria-hidden="true" />
-                                <h3>{holidaysQuery.isError ? 'Failed to load holidays' : 'No remaining holidays configured'}</h3>
-                                <p>{holidaysQuery.isError ? 'The holidays API did not return a valid format.' : 'There are no pending holidays for this year.'}</p>
-                            </div>
+                            <EmptyState
+                                icon={<CalendarDays size={30} aria-hidden="true" />}
+                                title={holidaysPage.isError() ? 'Failed to load holidays' : 'No remaining holidays configured'}
+                                description={holidaysPage.isError() ? 'The holidays API did not return a valid format.' : 'There are no pending holidays for this year.'}
+                            />
                         }
                     >
                         <div class="holiday-list">
-                            <For each={upcomingHolidays()}>
+                            <For each={holidaysPage.upcomingHolidays()}>
                                 {(holiday) => (
                                     <article class="holiday-item">
                                         <div class="holiday-item__date">

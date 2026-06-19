@@ -1,13 +1,11 @@
 import { Show } from 'solid-js'
-import { useMarcajesStore } from '../features/marcajes/application/marcajes.store'
+import { LoadingState } from '../components/ui/loading-state'
+import { PanelHeader } from '../components/ui/panel-header'
+import { useDashboardPage } from '../features/marcajes/application/use-dashboard-page'
 import { HistoryTable } from '../features/marcajes/ui/history-table'
 
 export function DashboardPage() {
-    const marcajesStore = useMarcajesStore()
-
-    const handleRefresh = async () => {
-        await marcajesStore.refresh()
-    }
+    const dashboardPage = useDashboardPage()
 
     return (
         <main class="dashboard-shell">
@@ -21,39 +19,27 @@ export function DashboardPage() {
                         <p class="hero-panel__lead">Working hours: 08:30 AM - 05:30 PM.</p>
                     </div>
                     <div class="hero-panel__actions">
-                        <button class="terminal-button" type="button" onClick={handleRefresh} disabled={marcajesStore.isRefetching()}>
-                            {marcajesStore.isRefetching() ? 'Refreshing...' : 'Refresh now'}
+                        <button class="terminal-button" type="button" onClick={dashboardPage.refresh} disabled={dashboardPage.isRefetching()}>
+                            {dashboardPage.isRefetching() ? 'Refreshing...' : 'Refresh now'}
                         </button>
                     </div>
                 </div>
             </section>
 
             <section class="panel history-panel">
-                <div class="panel-header">
-                    <div>
-                        <h2>Clocking feed</h2>
-                        <p class="panel-detail">Random delay of 1 to 20 minutes per RUT before execution</p>
-                    </div>
-                </div>
+                <PanelHeader title="Clocking feed" detail="Random delay of 1 to 20 minutes per RUT before execution" />
 
                 <Show
-                    when={!marcajesStore.isLoading() && marcajesStore.records().length > 0}
+                    when={!dashboardPage.isLoading() && dashboardPage.hasRecords()}
                     fallback={
                         <div class="history-fallback">
-                            <Show
-                                when={marcajesStore.isLoading()}
-                                fallback={<p>No clocking records available yet. Confirmations and same-direction warnings will appear here.</p>}
-                            >
-                                <div class="loading-grid" aria-hidden="true">
-                                    <span />
-                                    <span />
-                                    <span />
-                                </div>
+                            <Show when={dashboardPage.isLoading()} fallback={<p>No clocking records available yet. Confirmations and same-direction warnings will appear here.</p>}>
+                                <LoadingState withShell={false} />
                             </Show>
                         </div>
                     }
                 >
-                    <HistoryTable items={marcajesStore.records()} />
+                    <HistoryTable items={dashboardPage.records()} />
                 </Show>
             </section>
         </main>
