@@ -1,18 +1,47 @@
 import { For, Show } from 'solid-js'
-import { Plus, Trash2 } from 'lucide-solid'
+import { Lock, Plus, Trash2 } from 'lucide-solid'
 import { EmptyState } from '../components/ui/empty-state'
 import { LoadingState } from '../components/ui/loading-state'
 import { PanelHeader } from '../components/ui/panel-header'
 import { RefreshButton } from '../components/ui/refresh-button'
+import { useRutsAccess } from '../features/ruts/application/use-ruts-access'
 import { useRutsPage } from '../features/ruts/application/use-ruts-page'
 import { formatUpdatedAt, maskRut } from '../features/ruts/domain/rut.formatters'
 
 export function RutsPage() {
     const rutsPage = useRutsPage()
+    const access = useRutsAccess()
 
     return (
-        <main class="dashboard-shell">
-            <section class="panel history-panel">
+        <main class="dashboard-shell" classList={{ 'dashboard-shell--gated': !access.unlocked() }}>
+            <Show when={!access.unlocked()}>
+                <div class="access-gate">
+                    <form class="access-gate__card" onSubmit={access.handleSubmit}>
+                        <span class="access-gate__icon">
+                            <Lock size={22} aria-hidden="true" />
+                        </span>
+                        <h2 class="access-gate__title">Mantenedor restringido</h2>
+                        <p class="access-gate__hint">Ingresa tu correo autorizado para desbloquear la administración de RUTs.</p>
+                        <label class="access-gate__field">
+                            <span>Email</span>
+                            <input
+                                type="email"
+                                value={access.email()}
+                                onInput={(event) => access.setEmail(event.currentTarget.value)}
+                                placeholder="tucorreo@dominio.com"
+                                autocomplete="email"
+                                required
+                            />
+                        </label>
+                        <button class="terminal-button terminal-button--icon" type="submit">
+                            <Lock size={16} aria-hidden="true" />
+                            <span>Desbloquear</span>
+                        </button>
+                    </form>
+                </div>
+            </Show>
+
+            <section class="panel history-panel" inert={!access.unlocked()}>
                 <PanelHeader
                     title="RUT administration"
                     detail={`${rutsPage.activeCount()} active of ${rutsPage.items().length} configured RUTs`}
