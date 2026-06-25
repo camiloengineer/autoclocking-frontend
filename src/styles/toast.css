@@ -1,6 +1,6 @@
 .toast-host {
     position: fixed;
-    bottom: 20px;
+    top: 20px;
     right: 20px;
     z-index: 1000;
     display: flex;
@@ -59,7 +59,7 @@
 @keyframes toast-in {
     from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(-8px);
     }
 
     to {
