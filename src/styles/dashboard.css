@@ -439,15 +439,6 @@
     accent-color: var(--accent-primary);
 }
 
-.rut-error {
-    margin: 0 0 16px;
-    padding: 12px 14px;
-    border: 1px solid rgba(255, 107, 138, 0.32);
-    background: rgba(255, 107, 138, 0.1);
-    color: #ff9db3;
-    font-weight: 800;
-}
-
 .rut-summary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -34,10 +34,6 @@ export function RutsPage() {
                     </button>
                 </form>
 
-                <Show when={rutsPage.error()}>
-                    <p class="rut-error">{rutsPage.error()}</p>
-                </Show>
-
                 <Show
                     when={!rutsPage.isLoading()}
                     fallback={<LoadingState />}

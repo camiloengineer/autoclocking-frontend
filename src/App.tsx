@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/dashboard-page'
 import { HealthcheckPage } from './pages/healthcheck-page'
 import { HolidaysPage } from './pages/holidays-page'
 import { RutsPage } from './pages/ruts-page'
+import { ToastHost } from './components/ui/toast-host'
 
 function GithubMark() {
     return (
@@ -54,6 +55,7 @@ function App() {
             <Show when={appShell.activePage() === 'healthcheck'}>
                 <HealthcheckPage />
             </Show>
+            <ToastHost />
         </div>
     )
 }

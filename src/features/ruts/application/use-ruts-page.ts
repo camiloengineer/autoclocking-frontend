@@ -1,6 +1,7 @@
 import { createMemo, createSignal } from 'solid-js'
 import { createQuery, useQueryClient } from '@tanstack/solid-query'
 import { deleteRut, fetchRuts, saveRut, updateRutActive } from '../infra/ruts.api'
+import { pushToast } from '../../../app/application/toast-store'
 import { RUTS_QUERY_KEY } from './ruts.constants'
 
 export function useRutsPage() {
@@ -8,7 +9,6 @@ export function useRutsPage() {
     const [rut, setRut] = createSignal('')
     const [active, setActive] = createSignal(true)
     const [pendingAction, setPendingAction] = createSignal('')
-    const [error, setError] = createSignal('')
 
     const rutsQuery = createQuery(() => ({
         queryKey: RUTS_QUERY_KEY,
@@ -23,13 +23,11 @@ export function useRutsPage() {
     }
 
     const refreshRuts = async () => {
-        setError('')
         await rutsQuery.refetch()
     }
 
     const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault()
-        setError('')
         setPendingAction('save')
 
         try {
@@ -37,36 +35,37 @@ export function useRutsPage() {
             setRut('')
             setActive(true)
             await invalidateRuts()
+            pushToast('success', 'RUT added')
         } catch (saveError) {
-            setError(saveError instanceof Error ? saveError.message : 'Unable to save RUT')
+            pushToast('error', saveError instanceof Error ? saveError.message : 'Unable to save RUT')
         } finally {
             setPendingAction('')
         }
     }
 
     const handleToggle = async (targetRut: string, nextActive: boolean) => {
-        setError('')
         setPendingAction(`toggle:${targetRut}`)
 
         try {
             await updateRutActive(targetRut, nextActive)
             await invalidateRuts()
+            pushToast('success', nextActive ? 'RUT activated' : 'RUT deactivated')
         } catch (updateError) {
-            setError(updateError instanceof Error ? updateError.message : 'Unable to update RUT')
+            pushToast('error', updateError instanceof Error ? updateError.message : 'Unable to update RUT')
         } finally {
             setPendingAction('')
         }
     }
 
     const handleDelete = async (targetRut: string) => {
-        setError('')
         setPendingAction(`delete:${targetRut}`)
 
         try {
             await deleteRut(targetRut)
             await invalidateRuts()
+            pushToast('success', 'RUT deleted')
         } catch (deleteError) {
-            setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete RUT')
+            pushToast('error', deleteError instanceof Error ? deleteError.message : 'Unable to delete RUT')
         } finally {
             setPendingAction('')
         }
@@ -77,7 +76,6 @@ export function useRutsPage() {
         setRut,
         active,
         setActive,
-        error,
         pendingAction,
         items,
         activeCount,
