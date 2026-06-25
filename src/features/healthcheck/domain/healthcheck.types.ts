@@ -13,6 +13,7 @@ export type ExpectedRuts = {
     count: number
     keys: Set<string>
     masked: Set<string>
+    creationDates: string[]
 }
 
 export type DayCounts = {

@@ -89,8 +89,13 @@ function buildExpectedRuts(activeRuts: RutItem[], expectedRutKeys: Set<string>):
     return {
         count: activeRuts.length,
         keys: expectedRutKeys,
-        masked: new Set(activeRuts.map((rut) => maskRut(rut.rut)))
+        masked: new Set(activeRuts.map((rut) => maskRut(rut.rut))),
+        creationDates: activeRuts.map((rut) => rut.created_at.slice(0, 10))
     }
+}
+
+function expectedCountOn(expectedRuts: ExpectedRuts, date: string) {
+    return expectedRuts.creationDates.filter((created) => created <= date).length
 }
 
 function groupRecordsByDate(marcajes: MarcajeItem[]) {
@@ -154,49 +159,54 @@ function evaluateHealthcheckDay(date: string, context: HealthcheckContext): Heal
     const { expectedRuts, recordsByDate, firstMarcajeDate, holidayDates, today, currentMinute } = context
 
     if (expectedRuts.count === 0) {
-        return createHealthcheckDay(date, 'no-history', 'No active RUTs', null, expectedRuts.count)
+        return createHealthcheckDay(date, 'no-history', 'No active RUTs', null, 0)
     }
 
+    const expectedCount = expectedCountOn(expectedRuts, date)
     const counts = getDayCounts(recordsByDate.get(date) ?? [], expectedRuts)
     const nonWorkingDay = isWeekend(date) || holidayDates.has(date)
 
     if (nonWorkingDay && hasClocking(counts)) {
-        return createHealthcheckDay(date, 'error', 'Clocking found on non-working day', counts, expectedRuts.count)
+        return createHealthcheckDay(date, 'error', 'Clocking found on non-working day', counts, expectedCount)
     }
 
     if (nonWorkingDay) {
-        return createHealthcheckDay(date, 'ok', 'No clockings on non-working day', counts, expectedRuts.count)
+        return createHealthcheckDay(date, 'ok', 'No clockings on non-working day', counts, expectedCount)
     }
 
     if (date !== today && (!firstMarcajeDate || date < firstMarcajeDate)) {
-        return createHealthcheckDay(date, 'no-history', 'No history', null, expectedRuts.count)
+        return createHealthcheckDay(date, 'no-history', 'No history', null, expectedCount)
+    }
+
+    if (expectedCount === 0) {
+        return createHealthcheckDay(date, 'no-history', 'No history', null, expectedCount)
     }
 
     if (date === today && currentMinute < ENTRY_WINDOW_START_MINUTE) {
-        return createHealthcheckDay(date, 'no-history', "Entry window hasn't started", counts, expectedRuts.count)
+        return createHealthcheckDay(date, 'no-history', "Entry window hasn't started", counts, expectedCount)
     }
 
     if (date === today && currentMinute < ENTRY_DEADLINE_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Entry window in progress', counts, expectedRuts.count)
+        return createHealthcheckDay(date, 'ok', 'Entry window in progress', counts, expectedCount)
     }
 
-    if (counts.entrada < expectedRuts.count) {
-        return createHealthcheckDay(date, 'error', 'Entry incomplete after 08:30', counts, expectedRuts.count)
+    if (counts.entrada < expectedCount) {
+        return createHealthcheckDay(date, 'error', 'Entry incomplete after 08:30', counts, expectedCount)
     }
 
     if (date === today && currentMinute < EXIT_WINDOW_START_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Entry complete; exit pending', counts, expectedRuts.count)
+        return createHealthcheckDay(date, 'ok', 'Entry complete; exit pending', counts, expectedCount)
     }
 
     if (date === today && currentMinute < EXIT_DEADLINE_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Exit window in progress', counts, expectedRuts.count)
+        return createHealthcheckDay(date, 'ok', 'Exit window in progress', counts, expectedCount)
     }
 
-    if (counts.salida === expectedRuts.count) {
-        return createHealthcheckDay(date, 'ok', 'Entry and exit complete', counts, expectedRuts.count)
+    if (counts.salida === expectedCount) {
+        return createHealthcheckDay(date, 'ok', 'Entry and exit complete', counts, expectedCount)
     }
 
-    return createHealthcheckDay(date, 'error', 'Exit incomplete after 17:50', counts, expectedRuts.count)
+    return createHealthcheckDay(date, 'error', 'Exit incomplete after 17:50', counts, expectedCount)
 }
 
 export function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutItem[], expectedRutKeys: Set<string>, holidayDates: Set<string>): HealthcheckDay[] {
