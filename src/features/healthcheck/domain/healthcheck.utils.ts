@@ -8,7 +8,7 @@ import {
     EXIT_WINDOW_START_MINUTE,
     HEALTHCHECK_DAYS
 } from './healthcheck.constants'
-import type { DayCounts, ExpectedRuts, HealthcheckContext, HealthcheckDay, HealthStatus } from './healthcheck.types'
+import type { DayCounts, ExpectedRuts, HealthcheckContext, HealthcheckDay, HealthStatus, RutCreation } from './healthcheck.types'
 
 const US_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
@@ -37,17 +37,21 @@ function getMarcajeDate(item: MarcajeItem) {
     return item.fecha_clt.slice(0, 10) || item.created_at.slice(0, 10)
 }
 
-function getChileMinuteOfDay() {
+function cltMinuteOfDay(instant: Date) {
     const parts = new Intl.DateTimeFormat('en-GB', {
         hour: '2-digit',
         minute: '2-digit',
         hourCycle: 'h23',
         timeZone: 'America/Santiago'
-    }).formatToParts(new Date())
+    }).formatToParts(instant)
     const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? 0)
     const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? 0)
 
     return hour * 60 + minute
+}
+
+function getChileMinuteOfDay() {
+    return cltMinuteOfDay(new Date())
 }
 
 function normalizeRut(value: string) {
@@ -90,12 +94,30 @@ function buildExpectedRuts(activeRuts: RutItem[], expectedRutKeys: Set<string>):
         count: activeRuts.length,
         keys: expectedRutKeys,
         masked: new Set(activeRuts.map((rut) => maskRut(rut.rut))),
-        creationDates: activeRuts.map((rut) => rut.created_at.slice(0, 10))
+        creations: activeRuts.map((rut) => toCreation(rut.created_at))
     }
 }
 
-function expectedCountOn(expectedRuts: ExpectedRuts, date: string) {
-    return expectedRuts.creationDates.filter((created) => created <= date).length
+function toCreation(createdAt: string): RutCreation {
+    const instant = new Date(createdAt)
+    if (Number.isNaN(instant.getTime())) {
+        return { date: '', minute: 0 }
+    }
+
+    return { date: toISODate(instant), minute: cltMinuteOfDay(instant) }
+}
+
+function expectedCountForShift(expectedRuts: ExpectedRuts, date: string, deadlineMinute: number) {
+    return expectedRuts.creations.filter((created) => {
+        if (created.date < date) {
+            return true
+        }
+        if (created.date > date) {
+            return false
+        }
+
+        return created.minute <= deadlineMinute
+    }).length
 }
 
 function groupRecordsByDate(marcajes: MarcajeItem[]) {
@@ -133,14 +155,14 @@ function getLastPastDates(days: number) {
     return dates.reverse()
 }
 
-function createHealthcheckDay(date: string, status: HealthStatus, message: string, counts: DayCounts | null, expectedCount: number): HealthcheckDay {
+function createHealthcheckDay(date: string, status: HealthStatus, message: string, counts: DayCounts | null, expected: DayCounts): HealthcheckDay {
     return {
         date,
         label: formatDateLabel(date),
         status,
         message,
-        entrada: counts ? `${counts.entrada}/${expectedCount}` : 'No data',
-        salida: counts ? `${counts.salida}/${expectedCount}` : 'No data'
+        entrada: counts ? `${counts.entrada}/${expected.entrada}` : 'No data',
+        salida: counts ? `${counts.salida}/${expected.salida}` : 'No data'
     }
 }
 
@@ -159,54 +181,57 @@ function evaluateHealthcheckDay(date: string, context: HealthcheckContext): Heal
     const { expectedRuts, recordsByDate, firstMarcajeDate, holidayDates, today, currentMinute } = context
 
     if (expectedRuts.count === 0) {
-        return createHealthcheckDay(date, 'no-history', 'No active RUTs', null, 0)
+        return createHealthcheckDay(date, 'no-history', 'No active RUTs', null, { entrada: 0, salida: 0 })
     }
 
-    const expectedCount = expectedCountOn(expectedRuts, date)
+    const expected: DayCounts = {
+        entrada: expectedCountForShift(expectedRuts, date, ENTRY_DEADLINE_MINUTE),
+        salida: expectedCountForShift(expectedRuts, date, EXIT_DEADLINE_MINUTE)
+    }
     const counts = getDayCounts(recordsByDate.get(date) ?? [], expectedRuts)
     const nonWorkingDay = isWeekend(date) || holidayDates.has(date)
 
     if (nonWorkingDay && hasClocking(counts)) {
-        return createHealthcheckDay(date, 'error', 'Clocking found on non-working day', counts, expectedCount)
+        return createHealthcheckDay(date, 'error', 'Clocking found on non-working day', counts, expected)
     }
 
     if (nonWorkingDay) {
-        return createHealthcheckDay(date, 'ok', 'No clockings on non-working day', counts, expectedCount)
+        return createHealthcheckDay(date, 'ok', 'No clockings on non-working day', counts, expected)
     }
 
     if (date !== today && (!firstMarcajeDate || date < firstMarcajeDate)) {
-        return createHealthcheckDay(date, 'no-history', 'No history', null, expectedCount)
+        return createHealthcheckDay(date, 'no-history', 'No history', null, expected)
     }
 
-    if (expectedCount === 0) {
-        return createHealthcheckDay(date, 'no-history', 'No history', null, expectedCount)
+    if (expected.salida === 0) {
+        return createHealthcheckDay(date, 'no-history', 'No history', null, expected)
     }
 
     if (date === today && currentMinute < ENTRY_WINDOW_START_MINUTE) {
-        return createHealthcheckDay(date, 'no-history', "Entry window hasn't started", counts, expectedCount)
+        return createHealthcheckDay(date, 'no-history', "Entry window hasn't started", counts, expected)
     }
 
     if (date === today && currentMinute < ENTRY_DEADLINE_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Entry window in progress', counts, expectedCount)
+        return createHealthcheckDay(date, 'ok', 'Entry window in progress', counts, expected)
     }
 
-    if (counts.entrada < expectedCount) {
-        return createHealthcheckDay(date, 'error', 'Entry incomplete after 08:30', counts, expectedCount)
+    if (counts.entrada < expected.entrada) {
+        return createHealthcheckDay(date, 'error', 'Entry incomplete after 08:30', counts, expected)
     }
 
     if (date === today && currentMinute < EXIT_WINDOW_START_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Entry complete; exit pending', counts, expectedCount)
+        return createHealthcheckDay(date, 'ok', 'Entry complete; exit pending', counts, expected)
     }
 
     if (date === today && currentMinute < EXIT_DEADLINE_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Exit window in progress', counts, expectedCount)
+        return createHealthcheckDay(date, 'ok', 'Exit window in progress', counts, expected)
     }
 
-    if (counts.salida === expectedCount) {
-        return createHealthcheckDay(date, 'ok', 'Entry and exit complete', counts, expectedCount)
+    if (counts.salida === expected.salida) {
+        return createHealthcheckDay(date, 'ok', 'Entry and exit complete', counts, expected)
     }
 
-    return createHealthcheckDay(date, 'error', 'Exit incomplete after 17:50', counts, expectedCount)
+    return createHealthcheckDay(date, 'error', 'Exit incomplete after 17:50', counts, expected)
 }
 
 export function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutItem[], expectedRutKeys: Set<string>, holidayDates: Set<string>): HealthcheckDay[] {

@@ -9,11 +9,16 @@ export type HealthcheckDay = {
     salida: string
 }
 
+export type RutCreation = {
+    date: string
+    minute: number
+}
+
 export type ExpectedRuts = {
     count: number
     keys: Set<string>
     masked: Set<string>
-    creationDates: string[]
+    creations: RutCreation[]
 }
 
 export type DayCounts = {
