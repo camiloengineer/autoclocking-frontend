@@ -19,6 +19,8 @@ export type ExpectedRuts = {
     keys: Set<string>
     masked: Set<string>
     creations: RutCreation[]
+    creationByKey: Map<string, RutCreation>
+    creationByMasked: Map<string, RutCreation>
 }
 
 export type DayCounts = {

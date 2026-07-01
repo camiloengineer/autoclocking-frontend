@@ -14,7 +14,7 @@ export function useHealthcheckPage() {
             const rutKeys = await Promise.all(activeRuts.map((rut) => getRutKey(rut.rut)))
             const holidayDates = new Set(holidays.map((holiday) => holiday.date))
 
-            return buildHealthcheckDays(marcajes.items, activeRuts, new Set(rutKeys), holidayDates)
+            return buildHealthcheckDays(marcajes.items, activeRuts, rutKeys, holidayDates)
         }
     }))
 

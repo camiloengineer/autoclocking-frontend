@@ -74,27 +74,65 @@ function isExpectedRutRecord(item: MarcajeItem, expectedRutKeys: Set<string>, ex
     return item.rut_key ? expectedRutKeys.has(item.rut_key) : expectedMaskedRuts.has(item.rut_masked)
 }
 
-function countConfirmedRuts(records: MarcajeItem[], actionType: MarcajeItem['action_type'], expectedRuts: ExpectedRuts) {
-    const markedRuts = new Set(
-        records
-            .filter(
-                (item) =>
-                    item.action_type === actionType &&
-                    isConfirmedAction(item) &&
-                    isExpectedRutRecord(item, expectedRuts.keys, expectedRuts.masked)
-            )
-            .map((item) => item.rut_key || item.rut_masked)
-    )
+function recordCreation(item: MarcajeItem, expectedRuts: ExpectedRuts): RutCreation | null {
+    if (item.rut_key && expectedRuts.creationByKey.has(item.rut_key)) {
+        return expectedRuts.creationByKey.get(item.rut_key) ?? null
+    }
+
+    return expectedRuts.creationByMasked.get(item.rut_masked) ?? null
+}
+
+function creationQualifies(created: RutCreation, date: string, deadlineMinute: number) {
+    if (created.date < date) {
+        return true
+    }
+    if (created.date > date) {
+        return false
+    }
+
+    return created.minute <= deadlineMinute
+}
+
+function countConfirmedRuts(records: MarcajeItem[], actionType: MarcajeItem['action_type'], date: string, deadlineMinute: number, expectedRuts: ExpectedRuts) {
+    const markedRuts = new Set<string>()
+
+    for (const item of records) {
+        if (item.action_type !== actionType || !isConfirmedAction(item)) {
+            continue
+        }
+
+        const created = recordCreation(item, expectedRuts)
+        if (!created || !creationQualifies(created, date, deadlineMinute)) {
+            continue
+        }
+
+        markedRuts.add(item.rut_key || item.rut_masked)
+    }
 
     return markedRuts.size
 }
 
-function buildExpectedRuts(activeRuts: RutItem[], expectedRutKeys: Set<string>): ExpectedRuts {
+function buildExpectedRuts(activeRuts: RutItem[], rutKeys: string[]): ExpectedRuts {
+    const creations = activeRuts.map((rut) => toCreation(rut.created_at))
+    const creationByKey = new Map<string, RutCreation>()
+    const creationByMasked = new Map<string, RutCreation>()
+
+    activeRuts.forEach((rut, index) => {
+        const creation = creations[index]
+        const key = rutKeys[index]
+        if (key) {
+            creationByKey.set(key, creation)
+        }
+        creationByMasked.set(maskRut(rut.rut), creation)
+    })
+
     return {
         count: activeRuts.length,
-        keys: expectedRutKeys,
+        keys: new Set(rutKeys),
         masked: new Set(activeRuts.map((rut) => maskRut(rut.rut))),
-        creations: activeRuts.map((rut) => toCreation(rut.created_at))
+        creations,
+        creationByKey,
+        creationByMasked
     }
 }
 
@@ -108,16 +146,7 @@ function toCreation(createdAt: string): RutCreation {
 }
 
 function expectedCountForShift(expectedRuts: ExpectedRuts, date: string, deadlineMinute: number) {
-    return expectedRuts.creations.filter((created) => {
-        if (created.date < date) {
-            return true
-        }
-        if (created.date > date) {
-            return false
-        }
-
-        return created.minute <= deadlineMinute
-    }).length
+    return expectedRuts.creations.filter((created) => creationQualifies(created, date, deadlineMinute)).length
 }
 
 function groupRecordsByDate(marcajes: MarcajeItem[]) {
@@ -166,10 +195,10 @@ function createHealthcheckDay(date: string, status: HealthStatus, message: strin
     }
 }
 
-function getDayCounts(records: MarcajeItem[], expectedRuts: ExpectedRuts): DayCounts {
+function getDayCounts(records: MarcajeItem[], expectedRuts: ExpectedRuts, date: string): DayCounts {
     return {
-        entrada: countConfirmedRuts(records, 'ENTRADA', expectedRuts),
-        salida: countConfirmedRuts(records, 'SALIDA', expectedRuts)
+        entrada: countConfirmedRuts(records, 'ENTRADA', date, ENTRY_DEADLINE_MINUTE, expectedRuts),
+        salida: countConfirmedRuts(records, 'SALIDA', date, EXIT_DEADLINE_MINUTE, expectedRuts)
     }
 }
 
@@ -188,7 +217,7 @@ function evaluateHealthcheckDay(date: string, context: HealthcheckContext): Heal
         entrada: expectedCountForShift(expectedRuts, date, ENTRY_DEADLINE_MINUTE),
         salida: expectedCountForShift(expectedRuts, date, EXIT_DEADLINE_MINUTE)
     }
-    const counts = getDayCounts(recordsByDate.get(date) ?? [], expectedRuts)
+    const counts = getDayCounts(recordsByDate.get(date) ?? [], expectedRuts, date)
     const nonWorkingDay = isWeekend(date) || holidayDates.has(date)
 
     if (nonWorkingDay && hasClocking(counts)) {
@@ -234,8 +263,8 @@ function evaluateHealthcheckDay(date: string, context: HealthcheckContext): Heal
     return createHealthcheckDay(date, 'error', 'Exit incomplete after 17:50', counts, expected)
 }
 
-export function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutItem[], expectedRutKeys: Set<string>, holidayDates: Set<string>): HealthcheckDay[] {
-    const expectedRuts = buildExpectedRuts(activeRuts, expectedRutKeys)
+export function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutItem[], rutKeys: string[], holidayDates: Set<string>): HealthcheckDay[] {
+    const expectedRuts = buildExpectedRuts(activeRuts, rutKeys)
     const context: HealthcheckContext = {
         expectedRuts,
         recordsByDate: groupRecordsByDate(marcajes),
