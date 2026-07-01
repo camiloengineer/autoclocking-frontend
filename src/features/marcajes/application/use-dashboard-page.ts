@@ -1,12 +1,12 @@
 import { createMemo, createSignal } from 'solid-js'
-import { isFeedRelevantMarcaje } from '../domain/marcaje.filters'
+import { summarizeMarcajes } from '../domain/marcaje.summary'
 import { MARCAJES_FEED_PAGE_SIZE } from './marcajes.constants'
 import { useMarcajesStore } from './marcajes.store'
 
 export function useDashboardPage() {
     const marcajesStore = useMarcajesStore()
 
-    const visibleRecords = createMemo(() => marcajesStore.records().filter(isFeedRelevantMarcaje))
+    const visibleRecords = createMemo(() => summarizeMarcajes(marcajesStore.records()))
     const totalVisible = createMemo(() => visibleRecords().length)
     const hasRecords = createMemo(() => totalVisible() > 0)
     const totalPages = createMemo(() => Math.max(1, Math.ceil(totalVisible() / MARCAJES_FEED_PAGE_SIZE)))
