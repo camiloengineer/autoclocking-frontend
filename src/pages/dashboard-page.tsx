@@ -40,6 +40,34 @@ export function DashboardPage() {
                     }
                 >
                     <HistoryTable items={dashboardPage.records()} />
+                    <Show when={dashboardPage.totalPages() > 1}>
+                        <div class="history-pager">
+                            <span class="history-pager__status">
+                                Showing {dashboardPage.rangeStart()}-{dashboardPage.rangeEnd()} of {dashboardPage.totalVisible()}
+                            </span>
+                            <div class="history-pager__controls">
+                                <button
+                                    class="history-pager__button"
+                                    type="button"
+                                    onClick={dashboardPage.prevPage}
+                                    disabled={dashboardPage.page() <= 1}
+                                >
+                                    Prev
+                                </button>
+                                <span class="history-pager__page">
+                                    Page {dashboardPage.page()} of {dashboardPage.totalPages()}
+                                </span>
+                                <button
+                                    class="history-pager__button"
+                                    type="button"
+                                    onClick={dashboardPage.nextPage}
+                                    disabled={dashboardPage.page() >= dashboardPage.totalPages()}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    </Show>
                 </Show>
             </section>
         </main>
