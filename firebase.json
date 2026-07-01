@@ -1,4 +1,10 @@
 {
+    "firestore": [
+        {
+            "database": "autoclocking",
+            "rules": "firestore.rules"
+        }
+    ],
     "hosting": [
         {
             "target": "main",

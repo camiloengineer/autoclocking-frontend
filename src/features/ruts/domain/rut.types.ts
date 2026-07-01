@@ -9,3 +9,7 @@ export type RutsResponse = {
     count: number
     items: RutItem[]
 }
+
+export type RutRow = RutItem & {
+    ownerEmail: string
+}

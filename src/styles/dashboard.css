@@ -439,6 +439,53 @@
     accent-color: var(--accent-primary);
 }
 
+.rut-form--admin {
+    grid-template-columns: minmax(180px, 1fr) minmax(200px, 1fr) auto auto;
+}
+
+.panel-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.rut-session {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rut-session__role {
+    padding: 3px 8px;
+    border: 1px solid var(--surface-border-strong);
+    background: var(--accent-muted);
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.66rem;
+    font-weight: 800;
+}
+
+.rut-owner-input {
+    width: 100%;
+    min-width: 180px;
+    border: 1px solid rgba(125, 255, 155, 0.16);
+    background: rgba(7, 24, 12, 0.86);
+    color: var(--text-primary);
+    padding: 8px 10px;
+    font: inherit;
+}
+
+.rut-owner-input:focus {
+    outline: 2px solid rgba(125, 255, 155, 0.26);
+    outline-offset: 2px;
+}
+
+.rut-owner-input:disabled {
+    opacity: 0.55;
+}
+
 .rut-summary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
