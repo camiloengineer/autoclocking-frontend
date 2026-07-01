@@ -75,7 +75,7 @@ function isExpectedRutRecord(item: MarcajeItem, expectedRutKeys: Set<string>, ex
 }
 
 function recordCreation(item: MarcajeItem, expectedRuts: ExpectedRuts): RutCreation | null {
-    if (item.rut_key && expectedRuts.creationByKey.has(item.rut_key)) {
+    if (item.rut_key) {
         return expectedRuts.creationByKey.get(item.rut_key) ?? null
     }
 
