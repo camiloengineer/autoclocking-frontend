@@ -4,6 +4,7 @@ import { EmptyState } from '../components/ui/empty-state'
 import { LoadingState } from '../components/ui/loading-state'
 import { PanelHeader } from '../components/ui/panel-header'
 import { RefreshButton } from '../components/ui/refresh-button'
+import { ToggleSwitch } from '../components/ui/toggle-switch'
 import { handleSignIn, handleSignOut, session, status } from '../features/auth/application/auth-store'
 import { useRutsPage } from '../features/ruts/application/use-ruts-page'
 import { formatUpdatedAt, maskRut } from '../features/ruts/domain/rut.formatters'
@@ -74,10 +75,7 @@ function RutsManager() {
                                 required
                             />
                         </label>
-                        <label class="rut-form__check">
-                            <input type="checkbox" checked={rutsPage.active()} onChange={(event) => rutsPage.setActive(event.currentTarget.checked)} />
-                            <span>Active</span>
-                        </label>
+                        <ToggleSwitch checked={rutsPage.active()} label="Habilitado" onChange={rutsPage.setActive} />
                         <button class="terminal-button terminal-button--icon" type="submit" disabled={rutsPage.pendingAction() === 'save'}>
                             <Plus size={16} aria-hidden="true" />
                             <span>{rutsPage.pendingAction() === 'save' ? 'Saving' : 'Add RUT'}</span>
@@ -126,15 +124,12 @@ function RutsManager() {
                                                     </td>
                                                 </Show>
                                                 <td>
-                                                    <label class="rut-toggle">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={item.active}
-                                                            disabled={rutsPage.pendingAction() === `toggle:${item.rut}`}
-                                                            onChange={(event) => rutsPage.handleToggle(item.rut, event.currentTarget.checked)}
-                                                        />
-                                                        <span>{item.active ? 'Active' : 'Inactive'}</span>
-                                                    </label>
+                                                    <ToggleSwitch
+                                                        checked={item.active}
+                                                        label="Habilitado"
+                                                        disabled={rutsPage.pendingAction() === `toggle:${item.rut}`}
+                                                        onChange={(next) => rutsPage.handleToggle(item.rut, next)}
+                                                    />
                                                 </td>
                                                 <td>{formatUpdatedAt(item.updated_at)}</td>
                                                 <td>
