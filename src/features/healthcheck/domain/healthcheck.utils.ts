@@ -54,18 +54,6 @@ function getChileMinuteOfDay() {
     return cltMinuteOfDay(new Date())
 }
 
-function normalizeRut(value: string) {
-    return value.toLowerCase().replace(/[.\-\s]/g, '')
-}
-
-export async function getRutKey(value: string) {
-    const bytes = new TextEncoder().encode(normalizeRut(value))
-    const hash = await crypto.subtle.digest('SHA-256', bytes)
-    return Array.from(new Uint8Array(hash))
-        .map((byte) => byte.toString(16).padStart(2, '0'))
-        .join('')
-}
-
 function isConfirmedAction(item: MarcajeItem) {
     return item.status === 'success' || (item.status === 'info' && /^Duplicate clock/i.test(item.message))
 }

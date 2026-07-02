@@ -2,8 +2,9 @@ import { createQuery } from '@tanstack/solid-query'
 import { fetchHolidays } from '../../holidays/infra/holidays.api'
 import { fetchMarcajes } from '../../marcajes/infra/marcajes.api'
 import { fetchRuts } from '../../ruts/infra/ruts.api'
+import { getRutKey } from '../../ruts/domain/rut.formatters'
 import { HEALTHCHECK_QUERY_KEY } from './healthcheck.constants'
-import { buildHealthcheckDays, getRutKey } from '../domain/healthcheck.utils'
+import { buildHealthcheckDays } from '../domain/healthcheck.utils'
 
 export function useHealthcheckPage() {
     const healthcheckQuery = createQuery(() => ({

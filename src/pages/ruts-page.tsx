@@ -1,38 +1,14 @@
 import { For, Show } from 'solid-js'
-import { LogIn, LogOut, Lock, Plus, ShieldCheck, Trash2, UserRound } from 'lucide-solid'
+import { Plus, Trash2 } from 'lucide-solid'
 import { EmptyState } from '../components/ui/empty-state'
 import { LoadingState } from '../components/ui/loading-state'
 import { PanelHeader } from '../components/ui/panel-header'
 import { RefreshButton } from '../components/ui/refresh-button'
 import { ToggleSwitch } from '../components/ui/toggle-switch'
-import { handleSignIn, handleSignOut, session, status } from '../features/auth/application/auth-store'
 import { useRutsPage } from '../features/ruts/application/use-ruts-page'
 import { formatUpdatedAt, maskRut } from '../features/ruts/domain/rut.formatters'
 
-function SignInGate() {
-    return (
-        <main class="dashboard-shell dashboard-shell--gated">
-            <div class="access-gate">
-                <div class="access-gate__card">
-                    <span class="access-gate__icon">
-                        <Lock size={22} aria-hidden="true" />
-                    </span>
-                    <h2 class="access-gate__title">Mantenedor restringido</h2>
-                    <p class="access-gate__hint">Inicia sesión con tu cuenta de Google autorizada para administrar RUTs.</p>
-                    <button class="terminal-button terminal-button--icon" type="button" onClick={handleSignIn}>
-                        <LogIn size={16} aria-hidden="true" />
-                        <span>Continuar con Google</span>
-                    </button>
-                </div>
-            </div>
-            <section class="panel history-panel" inert>
-                <PanelHeader title="RUT administration" detail="Sesión requerida" />
-            </section>
-        </main>
-    )
-}
-
-function RutsManager() {
+export function RutsPage() {
     const rutsPage = useRutsPage()
 
     return (
@@ -40,22 +16,8 @@ function RutsManager() {
             <section class="panel history-panel">
                 <PanelHeader
                     title="RUT administration"
-                    detail={
-                        <span class="rut-session">
-                            {rutsPage.isAdmin() ? <ShieldCheck size={14} aria-hidden="true" /> : <UserRound size={14} aria-hidden="true" />}
-                            <span>{session()?.email}</span>
-                            <span class="rut-session__role">{rutsPage.isAdmin() ? 'Administrador' : 'Usuario'}</span>
-                        </span>
-                    }
-                    action={
-                        <div class="panel-actions">
-                            <RefreshButton busy={rutsPage.isFetching()} onClick={rutsPage.refreshRuts} />
-                            <button class="terminal-button terminal-button--icon" type="button" onClick={handleSignOut}>
-                                <LogOut size={16} aria-hidden="true" />
-                                <span>Salir</span>
-                            </button>
-                        </div>
-                    }
+                    detail={rutsPage.isAdmin() ? 'Todos los RUTs registrados' : 'Tus RUTs asignados'}
+                    action={<RefreshButton busy={rutsPage.isFetching()} onClick={rutsPage.refreshRuts} />}
                 />
 
                 <Show when={rutsPage.isAdmin()}>
@@ -153,15 +115,5 @@ function RutsManager() {
                 </Show>
             </section>
         </main>
-    )
-}
-
-export function RutsPage() {
-    return (
-        <Show when={status() !== 'loading'} fallback={<main class="dashboard-shell"><LoadingState /></main>}>
-            <Show when={session()} fallback={<SignInGate />}>
-                <RutsManager />
-            </Show>
-        </Show>
     )
 }

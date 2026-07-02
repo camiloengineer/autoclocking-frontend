@@ -84,6 +84,21 @@
     flex: 0 0 auto;
 }
 
+.app-header__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.app-header__session {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .dashboard-shell {
     display: grid;
     gap: 20px;
@@ -828,13 +843,13 @@
 
 }
 
-.dashboard-shell--gated {
+.app-content {
     position: relative;
 }
 
-.dashboard-shell--gated .history-panel {
+.app-content__view--gated {
     filter: blur(7px);
-    opacity: 0.6;
+    opacity: 0.55;
     user-select: none;
     pointer-events: none;
 }
@@ -844,8 +859,8 @@
     inset: 0;
     z-index: 5;
     display: grid;
-    place-items: center;
-    padding: 24px;
+    place-items: start center;
+    padding: clamp(56px, 16vh, 180px) 24px 24px;
 }
 
 .access-gate__card {
