@@ -13,7 +13,7 @@ export function HealthcheckPage() {
         <main class="dashboard-shell">
             <section class="panel history-panel">
                 <PanelHeader
-                    title="30-day healthcheck"
+                    title="7-day healthcheck"
                     detail="Working days must clock in/out; weekends and holidays must stay at 0/0."
                     action={<RefreshButton busy={healthcheckPage.isFetching()} onClick={healthcheckPage.refreshHealthcheck} />}
                 />
@@ -38,9 +38,9 @@ export function HealthcheckPage() {
                         <div class="healthcheck-uptime">
                             <div class="healthcheck-uptime__topline">
                                 <strong>{getUptimeValue(healthcheckPage.days())}% complete</strong>
-                                <span>Last 30 evaluated days</span>
+                                <span>Last 7 evaluated days</span>
                             </div>
-                            <div class="healthcheck-segments" aria-label="Healthcheck por día laboral">
+                            <div class="healthcheck-segments" aria-label="Healthcheck by working day">
                                 <For each={healthcheckPage.days()}>
                                     {(day) => (
                                         <span

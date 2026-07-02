@@ -5,7 +5,7 @@ import { fetchOwnersByEmail } from '../../ruts/infra/rut-owners.api'
 import { getRutKey, maskRut } from '../../ruts/domain/rut.formatters'
 import { summarizeMarcajes } from '../domain/marcaje.summary'
 import type { MarcajeItem } from '../domain/marcaje.types'
-import { MARCAJES_FEED_PAGE_SIZE, MARCAJES_OWNED_RUTS_QUERY_KEY } from './marcajes.constants'
+import { MARCAJES_FEED_PAGE_SIZE, MARCAJES_LOOKBACK_DAYS, MARCAJES_OWNED_RUTS_QUERY_KEY } from './marcajes.constants'
 import { useMarcajesStore } from './marcajes.store'
 
 type OwnedRutMatchers = {
@@ -15,6 +15,18 @@ type OwnedRutMatchers = {
 
 function belongsToOwner(item: MarcajeItem, matchers: OwnedRutMatchers): boolean {
     return item.rut_key ? matchers.keys.has(item.rut_key) : matchers.masked.has(item.rut_masked)
+}
+
+function getChileDateOffset(days: number) {
+    const base = new Date()
+    const chileToday = new Date(`${base.toLocaleDateString('en-CA', { timeZone: 'America/Santiago' })}T12:00:00-04:00`)
+    chileToday.setDate(chileToday.getDate() - days)
+    return chileToday.toLocaleDateString('en-CA', { timeZone: 'America/Santiago' })
+}
+
+function isWithinLookbackWindow(item: MarcajeItem) {
+    const itemDate = (item.fecha_clt || item.created_at).slice(0, 10)
+    return itemDate >= getChileDateOffset(MARCAJES_LOOKBACK_DAYS - 1)
 }
 
 export function useDashboardPage() {
@@ -48,7 +60,7 @@ export function useDashboardPage() {
         return all.filter((item) => belongsToOwner(item, matchers))
     })
 
-    const visibleRecords = createMemo(() => summarizeMarcajes(scopedRecords()))
+    const visibleRecords = createMemo(() => summarizeMarcajes(scopedRecords().filter(isWithinLookbackWindow)))
     const totalVisible = createMemo(() => visibleRecords().length)
     const hasRecords = createMemo(() => totalVisible() > 0)
     const totalPages = createMemo(() => Math.max(1, Math.ceil(totalVisible() / MARCAJES_FEED_PAGE_SIZE)))

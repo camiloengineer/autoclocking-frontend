@@ -16,7 +16,7 @@ export function RutsPage() {
             <section class="panel history-panel">
                 <PanelHeader
                     title="RUT administration"
-                    detail={rutsPage.isAdmin() ? 'Todos los RUTs registrados' : 'Tus RUTs asignados'}
+                    detail={rutsPage.isAdmin() ? 'All registered RUTs' : 'RUTs currently assigned to your account'}
                     action={<RefreshButton busy={rutsPage.isFetching()} onClick={rutsPage.refreshRuts} />}
                 />
 
@@ -32,12 +32,12 @@ export function RutsPage() {
                                 type="email"
                                 value={rutsPage.ownerEmail()}
                                 onInput={(event) => rutsPage.setOwnerEmail(event.currentTarget.value)}
-                                placeholder="dueno@dominio.com"
+                                placeholder="owner@domain.com"
                                 autocomplete="email"
                                 required
                             />
                         </label>
-                        <ToggleSwitch checked={rutsPage.active()} label="Habilitado" onChange={rutsPage.setActive} />
+                        <ToggleSwitch checked={rutsPage.active()} label="Enabled" onChange={rutsPage.setActive} />
                         <button class="terminal-button terminal-button--icon" type="submit" disabled={rutsPage.pendingAction() === 'save'}>
                             <Plus size={16} aria-hidden="true" />
                             <span>{rutsPage.pendingAction() === 'save' ? 'Saving' : 'Add RUT'}</span>
@@ -51,7 +51,7 @@ export function RutsPage() {
                         fallback={
                             <EmptyState
                                 title="No RUTs configured"
-                                description={rutsPage.isAdmin() ? 'Add a RUT to make it available for the scheduled marcaje job.' : 'Aún no tienes un RUT asignado. Contacta al administrador.'}
+                                description={rutsPage.isAdmin() ? 'Add a RUT to make it available for the scheduled clocking job.' : 'No RUT is assigned to your account yet. Contact an administrator.'}
                             />
                         }
                     >
@@ -79,7 +79,7 @@ export function RutsPage() {
                                                             class="rut-owner-input"
                                                             type="email"
                                                             value={item.ownerEmail}
-                                                            placeholder="sin dueño"
+                                                            placeholder="unassigned"
                                                             disabled={rutsPage.pendingAction() === `reassign:${item.rut}`}
                                                             onChange={(event) => rutsPage.handleReassign(item.rut, event.currentTarget.value)}
                                                         />
@@ -88,7 +88,7 @@ export function RutsPage() {
                                                 <td>
                                                     <ToggleSwitch
                                                         checked={item.active}
-                                                        label="Habilitado"
+                                                        label="Enabled"
                                                         disabled={rutsPage.pendingAction() === `toggle:${item.rut}`}
                                                         onChange={(next) => rutsPage.handleToggle(item.rut, next)}
                                                     />

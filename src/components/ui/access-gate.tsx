@@ -17,7 +17,7 @@ export function AccessGate(props: AccessGateProps) {
                 <p class="access-gate__hint">{props.hint}</p>
                 <button class="terminal-button terminal-button--icon" type="button" onClick={() => props.onSignIn()}>
                     <LogIn size={16} aria-hidden="true" />
-                    <span>Continuar con Google</span>
+                    <span>Continue with Google</span>
                 </button>
             </div>
         </div>

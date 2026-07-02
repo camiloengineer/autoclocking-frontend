@@ -19,7 +19,7 @@ subscribeToAuthState(async (user) => {
     try {
         isAdmin = await checkIsAdmin(email)
     } catch (roleError) {
-        pushToast('error', roleError instanceof Error ? roleError.message : 'No se pudo verificar el rol')
+        pushToast('error', roleError instanceof Error ? roleError.message : 'Unable to verify role')
     }
 
     setSession({ email, displayName: user.displayName ?? email, isAdmin })
@@ -30,16 +30,16 @@ export async function handleSignIn() {
     try {
         await signInWithGoogle()
     } catch (signInError) {
-        pushToast('error', signInError instanceof Error ? signInError.message : 'No se pudo iniciar sesión')
+        pushToast('error', signInError instanceof Error ? signInError.message : 'Unable to sign in')
     }
 }
 
 export async function handleSignOut() {
     try {
         await signOutFromGoogle()
-        pushToast('success', 'Sesión cerrada')
+        pushToast('success', 'Signed out')
     } catch (signOutError) {
-        pushToast('error', signOutError instanceof Error ? signOutError.message : 'No se pudo cerrar sesión')
+        pushToast('error', signOutError instanceof Error ? signOutError.message : 'Unable to sign out')
     }
 }
 

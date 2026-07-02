@@ -68,7 +68,7 @@ export function useRutsPage() {
         event.preventDefault()
 
         if (!ownerEmail().trim()) {
-            pushToast('error', 'Ingresa el email del dueño del RUT')
+            pushToast('error', 'Enter the owner email for this RUT')
             return
         }
 
@@ -129,9 +129,9 @@ export function useRutsPage() {
         try {
             await setRutOwner(targetRut, normalized)
             await invalidateAll()
-            pushToast('success', 'Dueño del RUT actualizado')
+            pushToast('success', 'RUT owner updated')
         } catch (reassignError) {
-            pushToast('error', reassignError instanceof Error ? reassignError.message : 'No se pudo reasignar el RUT')
+            pushToast('error', reassignError instanceof Error ? reassignError.message : 'Unable to reassign RUT')
         } finally {
             setPendingAction('')
         }

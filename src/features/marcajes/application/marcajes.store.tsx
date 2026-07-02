@@ -1,5 +1,6 @@
 import { createContext, createMemo, useContext, type Accessor, type JSX } from 'solid-js'
 import { createQuery } from '@tanstack/solid-query'
+import { session } from '../../auth/application/auth-store'
 import type { MarcajeItem } from '../domain/marcaje.types'
 import { fetchMarcajes } from '../infra/marcajes.api'
 import { MARCAJES_QUERY_KEY, MARCAJES_REFRESH_INTERVAL_MS } from './marcajes.constants'
@@ -21,7 +22,8 @@ export function MarcajesProvider(props: MarcajesProviderProps) {
     const marcajesQuery = createQuery(() => ({
         queryKey: MARCAJES_QUERY_KEY,
         queryFn: () => fetchMarcajes(),
-        refetchInterval: MARCAJES_REFRESH_INTERVAL_MS
+        refetchInterval: MARCAJES_REFRESH_INTERVAL_MS,
+        enabled: Boolean(session())
     }))
 
     const records = createMemo(() => marcajesQuery.data?.items ?? [])
