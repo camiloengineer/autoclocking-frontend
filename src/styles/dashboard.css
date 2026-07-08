@@ -248,9 +248,10 @@
 }
 
 .hero-panel__brand img {
-    width: clamp(58px, 9vw, 86px);
-    height: clamp(58px, 9vw, 86px);
-    filter: drop-shadow(0 0 18px rgba(255, 220, 120, 0.24));
+    width: clamp(40px, 6vw, 56px);
+    height: clamp(40px, 6vw, 56px);
+    opacity: 0.72;
+    filter: none;
 }
 
 .hero-panel__eyebrow {
