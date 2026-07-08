@@ -8,7 +8,7 @@ import {
     EXIT_WINDOW_START_MINUTE,
     HEALTHCHECK_DAYS
 } from './healthcheck.constants'
-import type { DayCounts, ExpectedRuts, HealthcheckContext, HealthcheckDay, HealthStatus, RutCreation } from './healthcheck.types'
+import type { DayCounts, ExpectedRuts, HealthcheckContext, HealthcheckDay, HealthStatus, RutCreation, TodayDetail } from './healthcheck.types'
 
 const US_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
@@ -81,23 +81,54 @@ function creationQualifies(created: RutCreation, date: string, deadlineMinute: n
     return created.minute <= deadlineMinute
 }
 
+function qualifiesAsConfirmed(item: MarcajeItem, actionType: MarcajeItem['action_type'], date: string, deadlineMinute: number, expectedRuts: ExpectedRuts) {
+    if (item.action_type !== actionType || !isConfirmedAction(item)) {
+        return false
+    }
+
+    const created = recordCreation(item, expectedRuts)
+    if (!created) {
+        return false
+    }
+
+    return creationQualifies(created, date, deadlineMinute)
+}
+
 function countConfirmedRuts(records: MarcajeItem[], actionType: MarcajeItem['action_type'], date: string, deadlineMinute: number, expectedRuts: ExpectedRuts) {
     const markedRuts = new Set<string>()
 
     for (const item of records) {
-        if (item.action_type !== actionType || !isConfirmedAction(item)) {
-            continue
+        if (qualifiesAsConfirmed(item, actionType, date, deadlineMinute, expectedRuts)) {
+            markedRuts.add(item.rut_key || item.rut_masked)
         }
-
-        const created = recordCreation(item, expectedRuts)
-        if (!created || !creationQualifies(created, date, deadlineMinute)) {
-            continue
-        }
-
-        markedRuts.add(item.rut_key || item.rut_masked)
     }
 
     return markedRuts.size
+}
+
+function extractClockTime(item: MarcajeItem) {
+    const time = item.fecha_clt.slice(11, 16)
+    return /^\d{2}:\d{2}$/.test(time) ? time : ''
+}
+
+function collectTodayTimes(records: MarcajeItem[], actionType: MarcajeItem['action_type'], date: string, deadlineMinute: number, expectedRuts: ExpectedRuts): { marked: number; times: string[] } {
+    const timeByRut = new Map<string, string>()
+
+    for (const item of records) {
+        if (!qualifiesAsConfirmed(item, actionType, date, deadlineMinute, expectedRuts)) {
+            continue
+        }
+
+        const id = item.rut_key || item.rut_masked
+        const time = extractClockTime(item)
+        const previous = timeByRut.get(id)
+        if (previous === undefined || (time !== '' && (previous === '' || time < previous))) {
+            timeByRut.set(id, time)
+        }
+    }
+
+    const times = [...timeByRut.values()].filter((value) => value !== '').sort()
+    return { marked: timeByRut.size, times }
 }
 
 function buildExpectedRuts(activeRuts: RutItem[], rutKeys: string[]): ExpectedRuts {
@@ -194,6 +225,20 @@ function hasClocking(counts: DayCounts) {
     return counts.entrada > 0 || counts.salida > 0
 }
 
+type PhaseVerdict = 'ok' | 'pending' | 'fail'
+
+function phaseVerdict(marked: number, expected: number, isToday: boolean, currentMinute: number, deadlineMinute: number): PhaseVerdict {
+    if (marked >= expected) {
+        return 'ok'
+    }
+
+    if (isToday && currentMinute < deadlineMinute) {
+        return 'pending'
+    }
+
+    return 'fail'
+}
+
 function evaluateHealthcheckDay(date: string, context: HealthcheckContext): HealthcheckDay {
     const { expectedRuts, recordsByDate, firstMarcajeDate, holidayDates, today, currentMinute } = context
 
@@ -224,34 +269,50 @@ function evaluateHealthcheckDay(date: string, context: HealthcheckContext): Heal
         return createHealthcheckDay(date, 'no-history', 'No history', null, expected)
     }
 
-    if (date === today && currentMinute < ENTRY_WINDOW_START_MINUTE) {
-        return createHealthcheckDay(date, 'no-history', "Entry window hasn't started", counts, expected)
-    }
+    const isToday = date === today
+    const entry = phaseVerdict(counts.entrada, expected.entrada, isToday, currentMinute, ENTRY_DEADLINE_MINUTE)
+    const exit = phaseVerdict(counts.salida, expected.salida, isToday, currentMinute, EXIT_DEADLINE_MINUTE)
 
-    if (date === today && currentMinute < ENTRY_DEADLINE_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Entry window in progress', counts, expected)
-    }
-
-    if (counts.entrada < expected.entrada) {
+    if (entry === 'fail') {
         return createHealthcheckDay(date, 'error', 'Entry incomplete after 08:30', counts, expected)
     }
 
-    if (date === today && currentMinute < EXIT_WINDOW_START_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Entry complete; exit pending', counts, expected)
+    if (exit === 'fail') {
+        return createHealthcheckDay(date, 'error', 'Exit incomplete after 17:50', counts, expected)
     }
 
-    if (date === today && currentMinute < EXIT_DEADLINE_MINUTE) {
-        return createHealthcheckDay(date, 'ok', 'Exit window in progress', counts, expected)
+    if (entry === 'pending') {
+        const message = currentMinute < ENTRY_WINDOW_START_MINUTE ? "Entry window hasn't started" : 'Entry window in progress'
+        return createHealthcheckDay(date, 'no-history', message, counts, expected)
     }
 
-    if (counts.salida === expected.salida) {
-        return createHealthcheckDay(date, 'ok', 'Entry and exit complete', counts, expected)
+    if (exit === 'pending') {
+        const message = currentMinute < EXIT_WINDOW_START_MINUTE ? 'Entry complete; exit pending' : 'Exit window in progress'
+        return createHealthcheckDay(date, 'no-history', message, counts, expected)
     }
 
-    return createHealthcheckDay(date, 'error', 'Exit incomplete after 17:50', counts, expected)
+    return createHealthcheckDay(date, 'ok', 'Entry and exit complete', counts, expected)
 }
 
-export function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutItem[], rutKeys: string[], holidayDates: Set<string>): HealthcheckDay[] {
+function buildTodayDetail(context: HealthcheckContext, todayDay: HealthcheckDay): TodayDetail {
+    const { expectedRuts, recordsByDate, holidayDates, today } = context
+    const records = recordsByDate.get(today) ?? []
+    const working = !(isWeekend(today) || holidayDates.has(today))
+    const entrada = collectTodayTimes(records, 'ENTRADA', today, ENTRY_DEADLINE_MINUTE, expectedRuts)
+    const salida = collectTodayTimes(records, 'SALIDA', today, EXIT_DEADLINE_MINUTE, expectedRuts)
+
+    return {
+        date: today,
+        label: todayDay.label,
+        status: todayDay.status,
+        message: todayDay.message,
+        working,
+        entrada: { marked: entrada.marked, expected: expectedCountForShift(expectedRuts, today, ENTRY_DEADLINE_MINUTE), times: entrada.times },
+        salida: { marked: salida.marked, expected: expectedCountForShift(expectedRuts, today, EXIT_DEADLINE_MINUTE), times: salida.times }
+    }
+}
+
+export function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutItem[], rutKeys: string[], holidayDates: Set<string>): { days: HealthcheckDay[]; today: TodayDetail } {
     const expectedRuts = buildExpectedRuts(activeRuts, rutKeys)
     const context: HealthcheckContext = {
         expectedRuts,
@@ -262,7 +323,10 @@ export function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutIte
         currentMinute: getChileMinuteOfDay()
     }
 
-    return [...getLastPastDates(HEALTHCHECK_DAYS - 1), context.today].map((date) => evaluateHealthcheckDay(date, context))
+    const pastDays = getLastPastDates(HEALTHCHECK_DAYS - 1).map((date) => evaluateHealthcheckDay(date, context))
+    const todayDay = evaluateHealthcheckDay(context.today, context)
+
+    return { days: [...pastDays, todayDay], today: buildTodayDetail(context, todayDay) }
 }
 
 export function getHealthSegmentClass(day: HealthcheckDay) {

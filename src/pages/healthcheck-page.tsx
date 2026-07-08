@@ -11,6 +11,38 @@ export function HealthcheckPage() {
 
     return (
         <main class="dashboard-shell">
+            <Show when={!healthcheckPage.isLoading() && !healthcheckPage.isError() ? healthcheckPage.today() : null}>
+                {(today) => (
+                    <section class="panel healthcheck-today">
+                        <PanelHeader title="Today" detail={today().label} />
+                        <p class="healthcheck-today__status" data-status={today().status}>{today().message}</p>
+                        <Show
+                            when={today().working}
+                            fallback={<p class="healthcheck-today__rest">Non-working day — no clocking expected.</p>}
+                        >
+                            <div class="healthcheck-today__lines">
+                                <For each={[{ label: 'Entry', line: today().entrada }, { label: 'Exit', line: today().salida }]}>
+                                    {(row) => (
+                                        <div class="healthcheck-today__line">
+                                            <span class="healthcheck-today__label">{row.label}</span>
+                                            <strong class="healthcheck-today__count">{row.line.marked} / {row.line.expected}</strong>
+                                            <Show
+                                                when={row.line.times.length > 0}
+                                                fallback={<span class="healthcheck-today__pending">{row.line.marked >= row.line.expected ? 'Complete' : 'Pending'}</span>}
+                                            >
+                                                <div class="healthcheck-today__times">
+                                                    <For each={row.line.times}>{(time) => <span>{time}</span>}</For>
+                                                </div>
+                                            </Show>
+                                        </div>
+                                    )}
+                                </For>
+                            </div>
+                        </Show>
+                    </section>
+                )}
+            </Show>
+
             <section class="panel history-panel">
                 <PanelHeader
                     title="7-day healthcheck"

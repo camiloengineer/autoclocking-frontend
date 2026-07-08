@@ -28,6 +28,22 @@ export type DayCounts = {
     salida: number
 }
 
+export type TodayLine = {
+    marked: number
+    expected: number
+    times: string[]
+}
+
+export type TodayDetail = {
+    date: string
+    label: string
+    status: HealthStatus
+    message: string
+    working: boolean
+    entrada: TodayLine
+    salida: TodayLine
+}
+
 export type HealthcheckContext = {
     expectedRuts: ExpectedRuts
     recordsByDate: Map<string, import('../../marcajes/domain/marcaje.types').MarcajeItem[]>

@@ -25,7 +25,8 @@ export function useHealthcheckPage() {
     }
 
     return {
-        days: () => healthcheckQuery.data ?? [],
+        days: () => healthcheckQuery.data?.days ?? [],
+        today: () => healthcheckQuery.data?.today ?? null,
         isLoading: () => healthcheckQuery.isLoading,
         isFetching: () => healthcheckQuery.isFetching,
         isError: () => healthcheckQuery.isError,
