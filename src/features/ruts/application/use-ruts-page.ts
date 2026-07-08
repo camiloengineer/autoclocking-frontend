@@ -75,8 +75,8 @@ export function useRutsPage() {
         setPendingAction('save')
 
         try {
-            await saveRut(rut(), active())
-            await setRutOwner(rut(), ownerEmail())
+            const saved = await saveRut(rut(), active())
+            await setRutOwner(saved.rut, ownerEmail())
             setRut('')
             setOwnerEmail('')
             setActive(true)
