@@ -892,6 +892,7 @@
 .healthcheck-today {
     display: grid;
     gap: 14px;
+    padding: 24px;
 }
 
 .healthcheck-today__status {
