@@ -7,8 +7,7 @@ export type MarcajeItem = {
     status: MarcajeStatus
     message: string
     details: string
-    rut_masked: string
-    rut_key: string
+    email_masked: string
     run_number: string
     fecha_clt: string
     created_at: string

@@ -16,7 +16,7 @@ export function HistoryTable(props: HistoryTableProps) {
                         <th>Action</th>
                         <th>Status</th>
                         <th>Timestamp</th>
-                        <th>RUT</th>
+                        <th>Account</th>
                         <th>Summary</th>
                     </tr>
                 </thead>
@@ -33,9 +33,9 @@ export function HistoryTable(props: HistoryTableProps) {
                                     <StatusBadge tone={getStatusTone(item.status)}>{formatStatusLabel(item.status)}</StatusBadge>
                                 </td>
                                 <td data-label="Timestamp">{formatCreatedAt(item.created_at)}</td>
-                                <td data-label="RUT">{item.rut_masked || 'Hidden'}</td>
+                                <td data-label="Account">{item.email_masked || 'Hidden'}</td>
                                 <td class="history-table__message" data-label="Summary">
-                                    <div class="history-table__message-summary">{formatMessageSummary(item.message || 'No additional detail', item.rut_masked)}</div>
+                                    <div class="history-table__message-summary">{formatMessageSummary(item.message || 'No additional detail')}</div>
                                 </td>
                             </tr>
                         )}

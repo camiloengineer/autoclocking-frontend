@@ -1,6 +1,6 @@
 import type { MarcajeItem } from '../../marcajes/domain/marcaje.types'
-import type { RutItem } from '../../ruts/domain/rut.types'
-import { maskRut } from '../../ruts/domain/rut.formatters'
+import type { AccountItem } from '../../accounts/domain/account.types'
+import { maskEmail } from '../../accounts/domain/account.formatters'
 import {
     ENTRY_DEADLINE_MINUTE,
     ENTRY_WINDOW_START_MINUTE,
@@ -58,16 +58,12 @@ function isConfirmedAction(item: MarcajeItem) {
     return item.status === 'success' || (item.status === 'info' && /^Duplicate clock/i.test(item.message))
 }
 
-function isExpectedRutRecord(item: MarcajeItem, expectedRutKeys: Set<string>, expectedMaskedRuts: Set<string>) {
-    return item.rut_key ? expectedRutKeys.has(item.rut_key) : expectedMaskedRuts.has(item.rut_masked)
+function isExpectedRecord(item: MarcajeItem, expectedMasked: Set<string>) {
+    return expectedMasked.has(item.email_masked)
 }
 
 function recordCreation(item: MarcajeItem, expectedRuts: ExpectedRuts): RutCreation | null {
-    if (item.rut_key) {
-        return expectedRuts.creationByKey.get(item.rut_key) ?? null
-    }
-
-    return expectedRuts.creationByMasked.get(item.rut_masked) ?? null
+    return expectedRuts.creationByMasked.get(item.email_masked) ?? null
 }
 
 function creationQualifies(created: RutCreation, date: string, deadlineMinute: number) {
@@ -94,16 +90,16 @@ function qualifiesAsConfirmed(item: MarcajeItem, actionType: MarcajeItem['action
     return creationQualifies(created, date, deadlineMinute)
 }
 
-function countConfirmedRuts(records: MarcajeItem[], actionType: MarcajeItem['action_type'], date: string, deadlineMinute: number, expectedRuts: ExpectedRuts) {
-    const markedRuts = new Set<string>()
+function countConfirmedAccounts(records: MarcajeItem[], actionType: MarcajeItem['action_type'], date: string, deadlineMinute: number, expectedRuts: ExpectedRuts) {
+    const marked = new Set<string>()
 
     for (const item of records) {
         if (qualifiesAsConfirmed(item, actionType, date, deadlineMinute, expectedRuts)) {
-            markedRuts.add(item.rut_key || item.rut_masked)
+            marked.add(item.email_masked)
         }
     }
 
-    return markedRuts.size
+    return marked.size
 }
 
 function extractClockTime(item: MarcajeItem) {
@@ -112,45 +108,37 @@ function extractClockTime(item: MarcajeItem) {
 }
 
 function collectTodayTimes(records: MarcajeItem[], actionType: MarcajeItem['action_type'], date: string, deadlineMinute: number, expectedRuts: ExpectedRuts): { marked: number; times: string[] } {
-    const timeByRut = new Map<string, string>()
+    const timeByAccount = new Map<string, string>()
 
     for (const item of records) {
         if (!qualifiesAsConfirmed(item, actionType, date, deadlineMinute, expectedRuts)) {
             continue
         }
 
-        const id = item.rut_key || item.rut_masked
+        const id = item.email_masked
         const time = extractClockTime(item)
-        const previous = timeByRut.get(id)
+        const previous = timeByAccount.get(id)
         if (previous === undefined || (time !== '' && (previous === '' || time < previous))) {
-            timeByRut.set(id, time)
+            timeByAccount.set(id, time)
         }
     }
 
-    const times = [...timeByRut.values()].filter((value) => value !== '').sort()
-    return { marked: timeByRut.size, times }
+    const times = [...timeByAccount.values()].filter((value) => value !== '').sort()
+    return { marked: timeByAccount.size, times }
 }
 
-function buildExpectedRuts(activeRuts: RutItem[], rutKeys: string[]): ExpectedRuts {
-    const creations = activeRuts.map((rut) => toCreation(rut.created_at))
-    const creationByKey = new Map<string, RutCreation>()
+function buildExpectedRuts(activeAccounts: AccountItem[]): ExpectedRuts {
+    const creations = activeAccounts.map((account) => toCreation(account.created_at))
     const creationByMasked = new Map<string, RutCreation>()
 
-    activeRuts.forEach((rut, index) => {
-        const creation = creations[index]
-        const key = rutKeys[index]
-        if (key) {
-            creationByKey.set(key, creation)
-        }
-        creationByMasked.set(maskRut(rut.rut), creation)
+    activeAccounts.forEach((account, index) => {
+        creationByMasked.set(maskEmail(account.email), creations[index])
     })
 
     return {
-        count: activeRuts.length,
-        keys: new Set(rutKeys),
-        masked: new Set(activeRuts.map((rut) => maskRut(rut.rut))),
+        count: activeAccounts.length,
+        masked: new Set(activeAccounts.map((account) => maskEmail(account.email))),
         creations,
-        creationByKey,
         creationByMasked
     }
 }
@@ -183,7 +171,7 @@ function groupRecordsByDate(marcajes: MarcajeItem[]) {
 
 function getFirstExpectedMarcajeDate(marcajes: MarcajeItem[], expectedRuts: ExpectedRuts) {
     const dates = marcajes
-        .filter((item) => item.action_type !== 'FERIADO' && isExpectedRutRecord(item, expectedRuts.keys, expectedRuts.masked))
+        .filter((item) => item.action_type !== 'FERIADO' && isExpectedRecord(item, expectedRuts.masked))
         .map(getMarcajeDate)
         .filter(Boolean)
 
@@ -216,8 +204,8 @@ function createHealthcheckDay(date: string, status: HealthStatus, message: strin
 
 function getDayCounts(records: MarcajeItem[], expectedRuts: ExpectedRuts, date: string): DayCounts {
     return {
-        entrada: countConfirmedRuts(records, 'ENTRADA', date, ENTRY_DEADLINE_MINUTE, expectedRuts),
-        salida: countConfirmedRuts(records, 'SALIDA', date, EXIT_DEADLINE_MINUTE, expectedRuts)
+        entrada: countConfirmedAccounts(records, 'ENTRADA', date, ENTRY_DEADLINE_MINUTE, expectedRuts),
+        salida: countConfirmedAccounts(records, 'SALIDA', date, EXIT_DEADLINE_MINUTE, expectedRuts)
     }
 }
 
@@ -243,7 +231,7 @@ function evaluateHealthcheckDay(date: string, context: HealthcheckContext): Heal
     const { expectedRuts, recordsByDate, firstMarcajeDate, holidayDates, today, currentMinute } = context
 
     if (expectedRuts.count === 0) {
-        return createHealthcheckDay(date, 'no-history', 'No active RUTs', null, { entrada: 0, salida: 0 })
+        return createHealthcheckDay(date, 'no-history', 'No active accounts', null, { entrada: 0, salida: 0 })
     }
 
     const expected: DayCounts = {
@@ -312,8 +300,8 @@ function buildTodayDetail(context: HealthcheckContext, todayDay: HealthcheckDay)
     }
 }
 
-export function buildHealthcheckDays(marcajes: MarcajeItem[], activeRuts: RutItem[], rutKeys: string[], holidayDates: Set<string>): { days: HealthcheckDay[]; today: TodayDetail } {
-    const expectedRuts = buildExpectedRuts(activeRuts, rutKeys)
+export function buildHealthcheckDays(marcajes: MarcajeItem[], activeAccounts: AccountItem[], holidayDates: Set<string>): { days: HealthcheckDay[]; today: TodayDetail } {
+    const expectedRuts = buildExpectedRuts(activeAccounts)
     const context: HealthcheckContext = {
         expectedRuts,
         recordsByDate: groupRecordsByDate(marcajes),

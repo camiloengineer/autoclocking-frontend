@@ -35,8 +35,8 @@ export function summarizeMarcajes(items: MarcajeItem[]): MarcajeItem[] {
             continue
         }
 
-        const rut = item.rut_key || item.rut_masked
-        const key = `${item.action_type}|${getMarcajeDate(item)}|${rut}`
+        const identity = item.email_masked
+        const key = `${item.action_type}|${getMarcajeDate(item)}|${identity}`
         const bucket = groups.get(key) ?? []
         bucket.push(item)
         groups.set(key, bucket)

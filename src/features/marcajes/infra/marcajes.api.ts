@@ -34,8 +34,7 @@ export async function fetchMarcajes(limit = MARCAJES_DEFAULT_LIMIT): Promise<Mar
             status: item.status as MarcajeStatus,
             message: String(item.message ?? ''),
             details: String(item.details ?? ''),
-            rut_masked: String(item.rut_masked ?? ''),
-            rut_key: String(item.rut_key ?? ''),
+            email_masked: String(item.email_masked ?? ''),
             run_number: String(item.run_number ?? ''),
             fecha_clt: String(item.fecha_clt ?? ''),
             created_at: String(item.created_at ?? '')

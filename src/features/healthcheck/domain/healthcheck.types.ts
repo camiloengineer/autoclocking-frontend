@@ -16,10 +16,8 @@ export type RutCreation = {
 
 export type ExpectedRuts = {
     count: number
-    keys: Set<string>
     masked: Set<string>
     creations: RutCreation[]
-    creationByKey: Map<string, RutCreation>
     creationByMasked: Map<string, RutCreation>
 }
 

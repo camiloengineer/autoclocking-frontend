@@ -7,10 +7,10 @@ import { AccessGate } from './components/ui/access-gate'
 import { LoadingState } from './components/ui/loading-state'
 import { ToastHost } from './components/ui/toast-host'
 import { handleSignIn, handleSignOut, session, status } from './features/auth/application/auth-store'
+import { AccountsPage } from './pages/accounts-page'
 import { DashboardPage } from './pages/dashboard-page'
 import { HealthcheckPage } from './pages/healthcheck-page'
 import { HolidaysPage } from './pages/holidays-page'
-import { RutsPage } from './pages/ruts-page'
 
 function GithubMark() {
     return (
@@ -150,10 +150,10 @@ function App() {
                 )}
             />
             <Route
-                path="/ruts"
+                path="/accounts"
                 component={() => (
                     <ProtectedView>
-                        <RutsPage />
+                        <AccountsPage />
                     </ProtectedView>
                 )}
             />

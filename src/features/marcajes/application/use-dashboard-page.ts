@@ -1,21 +1,10 @@
 import { createMemo, createSignal } from 'solid-js'
-import { createQuery } from '@tanstack/solid-query'
 import { session } from '../../auth/application/auth-store'
-import { fetchOwnersByEmail } from '../../ruts/infra/rut-owners.api'
-import { getRutKey, maskRut } from '../../ruts/domain/rut.formatters'
+import { maskEmail } from '../../accounts/domain/account.formatters'
 import { summarizeMarcajes } from '../domain/marcaje.summary'
 import type { MarcajeItem } from '../domain/marcaje.types'
-import { MARCAJES_FEED_PAGE_SIZE, MARCAJES_LOOKBACK_DAYS, MARCAJES_OWNED_RUTS_QUERY_KEY } from './marcajes.constants'
+import { MARCAJES_FEED_PAGE_SIZE, MARCAJES_LOOKBACK_DAYS } from './marcajes.constants'
 import { useMarcajesStore } from './marcajes.store'
-
-type OwnedRutMatchers = {
-    keys: Set<string>
-    masked: Set<string>
-}
-
-function belongsToOwner(item: MarcajeItem, matchers: OwnedRutMatchers): boolean {
-    return item.rut_key ? matchers.keys.has(item.rut_key) : matchers.masked.has(item.rut_masked)
-}
 
 function getChileDateOffset(days: number) {
     const base = new Date()
@@ -36,28 +25,14 @@ export function useDashboardPage() {
     const email = createMemo(() => session()?.email ?? '')
     const isScopedUser = createMemo(() => Boolean(session()) && !isAdmin())
 
-    const ownedRutsQuery = createQuery(() => ({
-        queryKey: [...MARCAJES_OWNED_RUTS_QUERY_KEY, email()],
-        queryFn: async (): Promise<OwnedRutMatchers> => {
-            const owners = await fetchOwnersByEmail(email())
-            const keys = await Promise.all(owners.map((owner) => getRutKey(owner.rut)))
-            return { keys: new Set(keys), masked: new Set(owners.map((owner) => maskRut(owner.rut))) }
-        },
-        enabled: isScopedUser()
-    }))
-
     const scopedRecords = createMemo(() => {
         const all = marcajesStore.records()
         if (!isScopedUser()) {
             return all
         }
 
-        const matchers = ownedRutsQuery.data
-        if (!matchers) {
-            return []
-        }
-
-        return all.filter((item) => belongsToOwner(item, matchers))
+        const ownMasked = maskEmail(email())
+        return all.filter((item) => item.email_masked === ownMasked)
     })
 
     const visibleRecords = createMemo(() => summarizeMarcajes(scopedRecords().filter(isWithinLookbackWindow)))
@@ -76,7 +51,7 @@ export function useDashboardPage() {
     const prevPage = () => setRequestedPage(page() - 1)
 
     const refresh = async () => {
-        await Promise.all([marcajesStore.refresh(), ownedRutsQuery.refetch()])
+        await marcajesStore.refresh()
     }
 
     return {
@@ -88,7 +63,7 @@ export function useDashboardPage() {
         rangeEnd,
         nextPage,
         prevPage,
-        isLoading: () => marcajesStore.isLoading() || (isScopedUser() && ownedRutsQuery.isLoading),
+        isLoading: () => marcajesStore.isLoading(),
         isRefetching: marcajesStore.isRefetching,
         hasRecords,
         refresh

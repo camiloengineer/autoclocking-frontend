@@ -32,7 +32,7 @@ export function getActionTone(action: MarcajeActionType) {
     return MARCAJES_ACTION_TONES[action]
 }
 
-export function formatMessage(value: string, rutMasked?: string) {
+export function formatMessage(value: string) {
     const normalized = value.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
     const lines = normalized
         .split('\n')
@@ -46,17 +46,11 @@ export function formatMessage(value: string, rutMasked?: string) {
             return previousLine !== ''
         })
 
-    const compact = lines.join('\n').trim()
-
-    if (!rutMasked) {
-        return compact
-    }
-
-    return compact.replace(/\b\d{7,8}[0-9kK]\b/g, rutMasked)
+    return lines.join('\n').trim()
 }
 
-export function formatMessageSummary(value: string, rutMasked?: string) {
-    const summary = formatMessage(value, rutMasked)
+export function formatMessageSummary(value: string) {
+    const summary = formatMessage(value)
         .split('\n')
         .map((line) => line.trim())
         .find((line) => line.length > 0) || 'No additional detail'
