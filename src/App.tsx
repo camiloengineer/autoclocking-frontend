@@ -3,10 +3,9 @@ import { ChevronDown, LogIn, LogOut, SquareArrowOutUpRight, UserRound } from 'lu
 import { createSignal, For, Show, type JSX } from 'solid-js'
 import { siGithub } from 'simple-icons'
 import { APP_NAV_ITEMS, APP_REPOSITORY_LINKS } from './app/application/app-shell.constants'
-import { AccessGate } from './components/ui/access-gate'
-import { LoadingState } from './components/ui/loading-state'
+import { ProtectedView } from './components/ui/protected-view'
 import { ToastHost } from './components/ui/toast-host'
-import { handleSignIn, handleSignOut, session, status } from './features/auth/application/auth-store'
+import { handleSignIn, handleSignOut, session } from './features/auth/application/auth-store'
 import { AboutPage } from './pages/about-page'
 import { AccountsPage } from './pages/accounts-page'
 import { DashboardPage } from './pages/dashboard-page'
@@ -23,23 +22,6 @@ function GithubMark() {
 
 function isClockInsPath(pathname: string) {
     return pathname === '/' || pathname === '/clock-ins'
-}
-
-function ProtectedView(props: { children: JSX.Element }) {
-    const isAccessRestricted = () => !session()
-
-    return (
-        <div class="app-content">
-            <div class="app-content__view" classList={{ 'app-content__view--gated': isAccessRestricted() }} inert={isAccessRestricted() || undefined}>
-                {props.children}
-            </div>
-            <Show when={isAccessRestricted()}>
-                <Show when={status() === 'signed-out'} fallback={<div class="access-gate"><LoadingState withShell={false} /></div>}>
-                    <AccessGate title="Restricted section" hint="Sign in with an authorized Google account to view private automation data." onSignIn={handleSignIn} />
-                </Show>
-            </Show>
-        </div>
-    )
 }
 
 function PublicView(props: { children: JSX.Element }) {
@@ -142,14 +124,7 @@ function AppLayout(props: RouteSectionProps) {
 function App() {
     return (
         <Router root={AppLayout}>
-            <Route
-                path={['/', '/clock-ins']}
-                component={() => (
-                    <ProtectedView>
-                        <DashboardPage />
-                    </ProtectedView>
-                )}
-            />
+            <Route path={['/', '/clock-ins']} component={() => <DashboardPage />} />
             <Route
                 path="/accounts"
                 component={() => (

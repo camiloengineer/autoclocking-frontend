@@ -286,41 +286,15 @@
 }
 
 .about-panel {
-    display: flex;
-    align-items: center;
-    gap: clamp(24px, 4vw, 56px);
-    padding: clamp(28px, 4vw, 46px);
-}
-
-.about-panel__copy {
     display: grid;
-    gap: 16px;
-    max-width: 640px;
-}
-
-.about-panel__copy h1 {
-    margin: 6px 0 0;
-    font-size: clamp(2rem, 3.6vw, 3.2rem);
-    line-height: 1.05;
-    letter-spacing: -0.035em;
-    font-weight: 800;
-    text-transform: uppercase;
-}
-
-.about-panel__copy p {
-    margin: 0;
-    color: var(--text-secondary);
-    line-height: 1.7;
-    font-size: 0.98rem;
-    font-weight: 600;
+    gap: 22px;
+    padding: clamp(28px, 4vw, 46px);
 }
 
 .about-panel__figure {
     margin: 0;
     display: grid;
     gap: 10px;
-    flex-shrink: 0;
-    max-width: 42%;
 }
 
 .about-panel__figure img {
@@ -338,15 +312,13 @@
     opacity: 0.8;
 }
 
-@media (max-width: 860px) {
-    .about-panel {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .about-panel__figure {
-        max-width: 100%;
-    }
+.about-panel__copy p {
+    margin: 0;
+    max-width: 900px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 0.98rem;
+    font-weight: 600;
 }
 
 .schedule-card {

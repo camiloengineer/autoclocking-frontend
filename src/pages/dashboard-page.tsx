@@ -2,6 +2,7 @@ import { Show } from 'solid-js'
 import { CalendarClock, Clock3 } from 'lucide-solid'
 import { LoadingState } from '../components/ui/loading-state'
 import { PanelHeader } from '../components/ui/panel-header'
+import { ProtectedView } from '../components/ui/protected-view'
 import { RefreshButton } from '../components/ui/refresh-button'
 import { useDashboardPage } from '../features/marcajes/application/use-dashboard-page'
 import { HistoryTable } from '../features/marcajes/ui/history-table'
@@ -21,7 +22,7 @@ export function DashboardPage() {
                                 <h1>AutoClocking 2.0</h1>
                             </div>
                         </div>
-                        <p class="hero-panel__lead">Scheduled clock-ins for the RUTs assigned to your account, with a compact weekly audit trail.</p>
+                        <p class="hero-panel__lead">Scheduled clock-ins for the accounts assigned to you, with a compact weekly audit trail.</p>
                     </div>
                     <div class="schedule-card">
                         <span class="schedule-card__icon"><CalendarClock size={20} aria-hidden="true" /></span>
@@ -34,10 +35,11 @@ export function DashboardPage() {
                 </div>
             </section>
 
+            <ProtectedView>
             <section class="panel history-panel">
                 <PanelHeader
                     title="Clocking feed"
-                    detail={<span class="panel-detail__content"><Clock3 size={15} aria-hidden="true" /> One consolidated row per RUT, date, and direction from the last 7 days</span>}
+                    detail={<span class="panel-detail__content"><Clock3 size={15} aria-hidden="true" /> One consolidated row per account, date, and direction from the last 7 days</span>}
                     action={<RefreshButton busy={dashboardPage.isRefetching()} onClick={dashboardPage.refresh} idleLabel="Refresh" busyLabel="Refreshing" />}
                 />
 
@@ -80,6 +82,7 @@ export function DashboardPage() {
                     </Show>
                 </Show>
             </section>
+            </ProtectedView>
         </main>
     )
 }
