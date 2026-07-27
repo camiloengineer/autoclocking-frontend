@@ -2,7 +2,8 @@ export const APP_NAV_ITEMS = [
     { path: '/clock-ins', label: 'Clock-ins', isPublic: false },
     { path: '/accounts', label: 'Accounts', isPublic: false },
     { path: '/holidays', label: 'Holidays', isPublic: true },
-    { path: '/healthcheck', label: 'Healthcheck', isPublic: true }
+    { path: '/healthcheck', label: 'Healthcheck', isPublic: true },
+    { path: '/about', label: 'About', isPublic: true }
 ] as const
 
 export const APP_REPOSITORY_LINKS = [

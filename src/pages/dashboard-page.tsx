@@ -15,10 +15,10 @@ export function DashboardPage() {
                 <div class="hero-panel__content">
                     <div class="hero-panel__main">
                         <div class="hero-panel__brand">
-                            <img src="/biohazard.svg" alt="" aria-hidden="true" />
+                            <img src="/buk.png" alt="" aria-hidden="true" />
                             <div>
                                 <span class="hero-panel__eyebrow"><span class="signal-dot" /> Automation console</span>
-                                <h1>AutoClocking</h1>
+                                <h1>AutoClocking 2.0</h1>
                             </div>
                         </div>
                         <p class="hero-panel__lead">Scheduled clock-ins for the RUTs assigned to your account, with a compact weekly audit trail.</p>

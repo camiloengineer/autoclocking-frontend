@@ -7,6 +7,7 @@ import { AccessGate } from './components/ui/access-gate'
 import { LoadingState } from './components/ui/loading-state'
 import { ToastHost } from './components/ui/toast-host'
 import { handleSignIn, handleSignOut, session, status } from './features/auth/application/auth-store'
+import { AboutPage } from './pages/about-page'
 import { AccountsPage } from './pages/accounts-page'
 import { DashboardPage } from './pages/dashboard-page'
 import { HealthcheckPage } from './pages/healthcheck-page'
@@ -170,6 +171,14 @@ function App() {
                 component={() => (
                     <PublicView>
                         <HealthcheckPage />
+                    </PublicView>
+                )}
+            />
+            <Route
+                path="/about"
+                component={() => (
+                    <PublicView>
+                        <AboutPage />
                     </PublicView>
                 )}
             />
