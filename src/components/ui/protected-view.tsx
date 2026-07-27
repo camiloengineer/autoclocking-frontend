@@ -1,7 +1,6 @@
 import { Show, type JSX } from 'solid-js'
 import { AccessGate } from './access-gate'
-import { LoadingState } from './loading-state'
-import { handleSignIn, session, status } from '../../features/auth/application/auth-store'
+import { session } from '../../features/auth/application/auth-store'
 
 export function ProtectedView(props: { children: JSX.Element }) {
     const isAccessRestricted = () => !session()
@@ -12,9 +11,7 @@ export function ProtectedView(props: { children: JSX.Element }) {
                 {props.children}
             </div>
             <Show when={isAccessRestricted()}>
-                <Show when={status() === 'signed-out'} fallback={<div class="access-gate"><LoadingState withShell={false} /></div>}>
-                    <AccessGate title="Restricted section" hint="Sign in with an authorized Google account to view private automation data." onSignIn={handleSignIn} />
-                </Show>
+                <AccessGate title="Restricted section" hint="Sign in with your Buk account — the same email and password you use to clock in. A valid login registers you automatically." />
             </Show>
         </div>
     )

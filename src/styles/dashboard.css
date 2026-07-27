@@ -1276,8 +1276,8 @@
     inset: 0;
     z-index: 5;
     display: grid;
-    place-items: start center;
-    padding: clamp(56px, 16vh, 180px) 24px 24px;
+    place-items: center;
+    padding: 24px;
 }
 
 .access-gate__card {
@@ -1317,6 +1317,20 @@
     font-size: 0.84rem;
     line-height: 1.5;
     color: var(--text-secondary);
+}
+
+.access-gate__form {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+}
+
+.access-gate__error {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    text-align: left;
+    color: var(--danger-primary);
 }
 
 .access-gate__field {

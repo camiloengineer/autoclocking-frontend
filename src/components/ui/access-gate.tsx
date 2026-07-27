@@ -1,9 +1,9 @@
-import { LogIn, Lock } from 'lucide-solid'
+import { Lock } from 'lucide-solid'
+import { LoginForm } from '../../features/auth/ui/login-form'
 
 type AccessGateProps = {
     title: string
     hint: string
-    onSignIn: () => void
 }
 
 export function AccessGate(props: AccessGateProps) {
@@ -15,10 +15,7 @@ export function AccessGate(props: AccessGateProps) {
                 </span>
                 <h2 class="access-gate__title">{props.title}</h2>
                 <p class="access-gate__hint">{props.hint}</p>
-                <button class="terminal-button terminal-button--icon" type="button" onClick={() => props.onSignIn()}>
-                    <LogIn size={16} aria-hidden="true" />
-                    <span>Continue with Google</span>
-                </button>
+                <LoginForm />
             </div>
         </div>
     )

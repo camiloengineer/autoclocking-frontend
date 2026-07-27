@@ -1,11 +1,11 @@
-import { A, Route, Router, useLocation, type RouteSectionProps } from '@solidjs/router'
+import { A, Route, Router, useLocation, useNavigate, type RouteSectionProps } from '@solidjs/router'
 import { ChevronDown, LogIn, LogOut, SquareArrowOutUpRight, UserRound } from 'lucide-solid'
 import { createSignal, For, Show, type JSX } from 'solid-js'
 import { siGithub } from 'simple-icons'
 import { APP_NAV_ITEMS, APP_REPOSITORY_LINKS } from './app/application/app-shell.constants'
 import { ProtectedView } from './components/ui/protected-view'
 import { ToastHost } from './components/ui/toast-host'
-import { handleSignIn, handleSignOut, session } from './features/auth/application/auth-store'
+import { handleSignOut, session } from './features/auth/application/auth-store'
 import { AboutPage } from './pages/about-page'
 import { AccountsPage } from './pages/accounts-page'
 import { DashboardPage } from './pages/dashboard-page'
@@ -30,6 +30,7 @@ function PublicView(props: { children: JSX.Element }) {
 
 function AppLayout(props: RouteSectionProps) {
     const location = useLocation()
+    const navigate = useNavigate()
     const isCurrentPath = (path: string) => (path === '/clock-ins' ? isClockInsPath(location.pathname) : location.pathname === path)
     const [isAccountMenuOpen, setIsAccountMenuOpen] = createSignal(false)
 
@@ -51,7 +52,7 @@ function AppLayout(props: RouteSectionProps) {
                         <Show
                             when={session()}
                             fallback={
-                                <button class="account-action" type="button" onClick={handleSignIn}>
+                                <button class="account-action" type="button" onClick={() => navigate('/accounts')}>
                                     <LogIn size={16} aria-hidden="true" />
                                     <span>Sign in</span>
                                 </button>
@@ -70,8 +71,8 @@ function AppLayout(props: RouteSectionProps) {
                                             <UserRound size={17} aria-hidden="true" />
                                         </span>
                                         <span class="account-chip__identity">
-                                            <strong>{currentSession().displayName || 'Authorized user'}</strong>
-                                            <span>{currentSession().email}</span>
+                                            <strong>{currentSession().email}</strong>
+                                            <span>{currentSession().isAdmin ? 'Administrator' : 'Buk account'}</span>
                                         </span>
                                         <ChevronDown class="account-chip__caret" size={16} aria-hidden="true" />
                                     </button>

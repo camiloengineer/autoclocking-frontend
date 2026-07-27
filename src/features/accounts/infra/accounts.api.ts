@@ -2,12 +2,6 @@ import type { AccountItem, AccountsResponse } from '../domain/account.types'
 
 const ACCOUNTS_DEFAULT_API_URL = 'https://marcajes-vg7vvkcauq-ue.a.run.app/accounts'
 
-const ERROR_BY_CODE: Record<string, string> = {
-    invalid_credentials: 'Buk rejected the email or password',
-    account_locked: 'Account locked by Buk — check the unlock email',
-    buk_unreachable: 'Could not validate against Buk, try again'
-}
-
 function getAccountsApiUrl() {
     return import.meta.env.VITE_ACCOUNTS_API_URL || ACCOUNTS_DEFAULT_API_URL
 }
@@ -24,10 +18,7 @@ function normalizeItem(item: Partial<AccountItem>): AccountItem {
 
 async function readError(response: Response): Promise<string> {
     try {
-        const payload = (await response.json()) as { error?: string; code?: string }
-        if (payload.code && ERROR_BY_CODE[payload.code]) {
-            return ERROR_BY_CODE[payload.code]
-        }
+        const payload = (await response.json()) as { error?: string }
         if (payload.error) {
             return payload.error
         }
@@ -63,21 +54,6 @@ export async function fetchAccounts(): Promise<AccountsResponse> {
         count: payload.count,
         items: payload.items.map(normalizeItem)
     }
-}
-
-export async function createAccount(email: string, password: string, active: boolean): Promise<AccountItem> {
-    return normalizeItem(
-        await readJsonResponse<Partial<AccountItem>>(
-            await fetch(getAccountsApiUrl(), {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password, active })
-            })
-        )
-    )
 }
 
 export async function updateAccountActive(email: string, active: boolean): Promise<AccountItem> {

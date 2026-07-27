@@ -1,7 +1,5 @@
 export type AppSession = {
     email: string
-    displayName: string
+    jobId: string
     isAdmin: boolean
 }
-
-export type AuthStatus = 'loading' | 'signed-out' | 'signed-in'

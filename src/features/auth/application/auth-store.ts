@@ -1,46 +1,44 @@
 import { createSignal } from 'solid-js'
 import { pushToast } from '../../../app/application/toast-store'
-import { checkIsAdmin, signInWithGoogle, signOutFromGoogle, subscribeToAuthState } from '../infra/auth.api'
-import type { AppSession, AuthStatus } from '../domain/session.types'
+import { createBukSession } from '../infra/auth.api'
+import type { AppSession } from '../domain/session.types'
 
-const [session, setSession] = createSignal<AppSession | null>(null)
-const [status, setStatus] = createSignal<AuthStatus>('loading')
+const SESSION_STORAGE_KEY = 'autoclocking.session'
 
-subscribeToAuthState(async (user) => {
-    if (!user?.email) {
-        setSession(null)
-        setStatus('signed-out')
-        return
-    }
-
-    const email = user.email.toLowerCase()
-    let isAdmin = false
-
+function readStoredSession(): AppSession | null {
     try {
-        isAdmin = await checkIsAdmin(email)
-    } catch (roleError) {
-        pushToast('error', roleError instanceof Error ? roleError.message : 'Unable to verify role')
-    }
-
-    setSession({ email, displayName: user.displayName ?? email, isAdmin })
-    setStatus('signed-in')
-})
-
-export async function handleSignIn() {
-    try {
-        await signInWithGoogle()
-    } catch (signInError) {
-        pushToast('error', signInError instanceof Error ? signInError.message : 'Unable to sign in')
+        const raw = localStorage.getItem(SESSION_STORAGE_KEY)
+        if (!raw) {
+            return null
+        }
+        const parsed = JSON.parse(raw) as Partial<AppSession>
+        if (typeof parsed.email !== 'string' || !parsed.email) {
+            return null
+        }
+        return {
+            email: parsed.email,
+            jobId: String(parsed.jobId ?? ''),
+            isAdmin: Boolean(parsed.isAdmin)
+        }
+    } catch {
+        return null
     }
 }
 
-export async function handleSignOut() {
-    try {
-        await signOutFromGoogle()
-        pushToast('success', 'Signed out')
-    } catch (signOutError) {
-        pushToast('error', signOutError instanceof Error ? signOutError.message : 'Unable to sign out')
-    }
+const [session, setSession] = createSignal<AppSession | null>(readStoredSession())
+
+/** Validates the Buk credentials against the API and persists the resulting session. Throws AuthError for the form to render inline. */
+export async function signInWithBuk(email: string, password: string): Promise<void> {
+    const nextSession = await createBukSession(email, password)
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession))
+    setSession(nextSession)
+    pushToast('success', 'Signed in')
 }
 
-export { session, status }
+export function handleSignOut() {
+    localStorage.removeItem(SESSION_STORAGE_KEY)
+    setSession(null)
+    pushToast('success', 'Signed out')
+}
+
+export { session }
